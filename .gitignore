@@ -36,6 +36,8 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+.tamagui/
+
 app-example
 
 # generated native folders
