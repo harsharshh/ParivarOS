@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { Platform, StyleSheet } from 'react-native';
+import { Button, Card, Switch } from 'tamagui';
 
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -19,7 +20,13 @@ export default function HomeScreen() {
       }>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome!</ThemedText>
+        <Switch size="$4">
+          <Switch.Thumb animation="bouncy" />
+        </Switch><Button >Plain</Button>
         <HelloWave />
+        <Card backgroundColor="red" padding="$4" borderRadius="$4" marginTop="$4">
+          <ThemedText color="$text">This is a Tamagui Card with accent background!</ThemedText>
+        </Card>
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
