@@ -1,10 +1,10 @@
 import { Tabs } from 'expo-router';
 import React, { useContext } from 'react';
 
+import { ThemePreferenceContext } from '@/app/_layout';
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { ThemePreferenceContext } from '@/app/_layout';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
@@ -32,6 +32,20 @@ export default function TabLayout() {
         options={{
           title: 'Explore',
           tabBarIcon: ({ color }) => <Ionicons name="paper-plane" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="connect"
+        options={{
+          title: 'Connect',
+          tabBarIcon: ({ color }) => <Ionicons name="chatbubbles" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="avatar"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <Ionicons name="person-circle" size={26} color={color} />,
         }}
       />
     </Tabs>

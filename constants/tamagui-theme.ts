@@ -1,5 +1,5 @@
-import { createThemes, defaultComponentThemes } from '@tamagui/theme-builder';
 import * as Colors from '@tamagui/colors';
+import { createThemes, defaultComponentThemes } from '@tamagui/theme-builder';
 
 export const darkPalette = [
   'hsla(0, 15%, 1%, 1)',
@@ -78,34 +78,8 @@ const builtThemes = createThemes({
 
   accent: {
     palette: {
-      dark: [
-        'hsla(250, 50%, 35%, 1)',
-        'hsla(250, 50%, 38%, 1)',
-        'hsla(250, 50%, 41%, 1)',
-        'hsla(250, 50%, 43%, 1)',
-        'hsla(250, 50%, 46%, 1)',
-        'hsla(250, 50%, 49%, 1)',
-        'hsla(250, 50%, 52%, 1)',
-        'hsla(250, 50%, 54%, 1)',
-        'hsla(250, 50%, 57%, 1)',
-        'hsla(250, 50%, 60%, 1)',
-        'hsla(250, 50%, 90%, 1)',
-        'hsla(250, 50%, 95%, 1)',
-      ],
-      light: [
-        'hsla(250, 50%, 40%, 1)',
-        'hsla(250, 50%, 43%, 1)',
-        'hsla(250, 50%, 46%, 1)',
-        'hsla(250, 50%, 48%, 1)',
-        'hsla(250, 50%, 51%, 1)',
-        'hsla(250, 50%, 54%, 1)',
-        'hsla(250, 50%, 57%, 1)',
-        'hsla(250, 50%, 59%, 1)',
-        'hsla(250, 50%, 62%, 1)',
-        'hsla(250, 50%, 65%, 1)',
-        'hsla(250, 50%, 95%, 1)',
-        'hsla(250, 50%, 95%, 1)',
-      ],
+      dark: ['hsla(30, 50%, 35%, 1)','hsla(30, 50%, 38%, 1)','hsla(30, 50%, 41%, 1)','hsla(30, 50%, 43%, 1)','hsla(30, 50%, 46%, 1)','hsla(30, 50%, 49%, 1)','hsla(30, 50%, 52%, 1)','hsla(30, 50%, 54%, 1)','hsla(30, 50%, 57%, 1)','hsla(30, 50%, 60%, 1)','hsla(250, 50%, 90%, 1)','hsla(250, 50%, 95%, 1)'],
+      light: ['hsla(30, 50%, 47%, 1)','hsla(30, 50%, 49%, 1)','hsla(30, 50%, 51%, 1)','hsla(30, 50%, 53%, 1)','hsla(30, 50%, 55%, 1)','hsla(30, 50%, 57%, 1)','hsla(30, 50%, 59%, 1)','hsla(30, 50%, 61%, 1)','hsla(30, 50%, 63%, 1)','hsla(30, 50%, 65%, 1)','hsla(250, 50%, 95%, 1)','hsla(250, 50%, 95%, 1)'],
     },
   },
 
