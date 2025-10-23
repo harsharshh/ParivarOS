@@ -3,12 +3,13 @@ import { doc, getDoc } from 'firebase/firestore';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, DrawerLayoutAndroid, Modal, PanResponder, Platform, ScrollView, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Avatar, Button, Card, Paragraph, Switch, Text, XStack, YStack, Separator } from 'tamagui';
+import { Avatar, Button, Card, ListItem, Paragraph, Separator, Switch, Text, XStack, YStack } from 'tamagui';
 
 import { FamilyCardIllustration } from '@/assets/images/family-card-illustration';
 import { firebaseAuth, firebaseDb } from '@/config/firebase';
 import { BrandSpacing, BrandTypography } from '@/design-system';
 import { ThemePreferenceContext } from '@/app/_layout';
+import { ThemeColors, darkPalette, lightPalette } from '@/constants/tamagui-theme';
 import { useLocalSearchParams } from 'expo-router';
 
 const mockQuote = {
@@ -27,12 +28,31 @@ const summaryCards = [
 export default function HomeScreen() {
   const { themeName, setThemeName } = useContext(ThemePreferenceContext);
   const params = useLocalSearchParams<{ profileName?: string }>();
+  const palette = ThemeColors[themeName];
+  const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
   const initialNameRef = useRef<string | null>(typeof params.profileName === 'string' ? params.profileName : null);
   const drawerRef = useRef<DrawerLayoutAndroid | null>(null);
   const [iosDrawerVisible, setIosDrawerVisible] = useState(false);
   const [profileName, setProfileName] = useState<string>(initialNameRef.current ?? '');
   const drawerWidth = 320;
   const iosDrawerTranslate = useRef(new Animated.Value(-drawerWidth)).current;
+
+  const backgroundColor = palette.background;
+  const cardBackground = basePalette[themeName === 'dark' ? 3 : 1];
+  const cardBorder = basePalette[themeName === 'dark' ? 6 : 7];
+  const subtleSurface = basePalette[themeName === 'dark' ? 5 : 2];
+  const dividerColor = basePalette[themeName === 'dark' ? 7 : 8];
+  const primaryText = palette.text;
+  const secondaryText = basePalette[themeName === 'dark' ? 9 : 6];
+  const quoteCardBg = basePalette[themeName === 'dark' ? 4 : 2];
+  const quoteAccent = palette.tint;
+  const quoteText = basePalette[themeName === 'dark' ? 10 : 9];
+  const quoteAuthor = basePalette[themeName === 'dark' ? 8 : 10];
+  const statCardBg = basePalette[themeName === 'dark' ? 2 : 1];
+  const statBorder = basePalette[themeName === 'dark' ? 7 : 8];
+  const accentButtonBorder = palette.tint;
+  const overlayShade = themeName === 'dark' ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.35)';
+
   const panResponder = useMemo(
     () =>
       PanResponder.create({
@@ -93,6 +113,7 @@ export default function HomeScreen() {
     return first || profileName;
   }, [profileName]);
 
+
   const openDrawer = useCallback(() => {
     if (Platform.OS === 'android') {
       drawerRef.current?.openDrawer();
@@ -125,11 +146,11 @@ export default function HomeScreen() {
 
   const drawerContent = (
     <ScrollView
-      style={{ flex: 1, backgroundColor: '#f4f1ff' }}
+      style={{ flex: 1, backgroundColor }}
       contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32, paddingTop: 56, flexGrow: 1 }}
     >
       <YStack flex={1} gap="$4">
-        <Card padding="$4" backgroundColor="#ffffff" bordered borderColor="rgba(148,124,255,0.25)" gap="$3" shadowColor="rgba(92,70,205,0.12)" shadowRadius={12}>
+        <Card padding="$4" backgroundColor={cardBackground} bordered borderColor={cardBorder} gap="$3" shadowColor="rgba(92,70,205,0.12)" shadowRadius={12}>
           <XStack ai="center" gap="$3">
             <Avatar size="$5" circular bg="rgba(148,124,255,0.9)" ai="center" jc="center">
               <Avatar.Image src={firebaseAuth?.currentUser?.photoURL ?? undefined} />
@@ -138,74 +159,71 @@ export default function HomeScreen() {
               </Avatar.Fallback>
             </Avatar>
             <YStack flex={1}>
-              <Text fontSize={18} fontWeight="700">{profileName || firstName}</Text>
-              <Text color="rgba(49,38,92,0.6)" fontSize={12}>ParivarOS Member</Text>
+              <Text fontSize={18} fontWeight="700" color={primaryText}>{profileName || firstName}</Text>
+              <Text color={secondaryText} fontSize={12}>ParivarOS Member</Text>
             </YStack>
-            <Button size="$2" circular icon={Edit3} variant="outlined" borderColor="rgba(148,124,255,0.4)" />
+            <Button size="$2" circular icon={Edit3} variant="outlined" borderColor={accentButtonBorder} />
           </XStack>
 
           <XStack ai="center" jc="space-between" mt="$3">
-            <Text fontWeight="600">Theme</Text>
-            <Switch value={themeName === 'dark'} onValueChange={(value) => setThemeName(value ? 'dark' : 'light')}>
-              <Switch.Thumb icon={themeName === 'dark' ? Moon : Sun} />
+            <Text fontWeight="600" color={primaryText}>Theme</Text>
+            <Switch checked={themeName === 'dark'} onCheckedChange={(value) => setThemeName(value ? 'dark' : 'light')}>
+              <Switch.Thumb
+                backgroundColor={themeName === 'dark' ? 'rgba(255,255,255,0.18)' : '#fff'}
+                ai="center"
+                jc="center"
+              >
+                {themeName === 'dark' ? <Moon size={14} color="#fff" /> : <Sun size={14} color="#f7c948" />}
+              </Switch.Thumb>
             </Switch>
           </XStack>
         </Card>
 
-        <Card padding="$3" backgroundColor="#fff" bordered borderColor="rgba(148,124,255,0.2)">
-          <YStack gap="$2">
-            {mainMenuItems.map((item) => (
-              <Button
-                key={item.label}
-                justifyContent="flex-start"
-                icon={item.icon}
-                variant="outlined"
-                borderColor="rgba(148,124,255,0.2)"
-                backgroundColor="rgba(148,124,255,0.12)"
-                paddingHorizontal="$4"
-                paddingVertical="$3"
-                borderRadius="$5"
-                width="100%"
-              >
-                <Text numberOfLines={1}>{item.label}</Text>
-              </Button>
-            ))}
-          </YStack>
-        </Card>
+        <YStack gap="$2">
+          {mainMenuItems.map((item) => (
+            <ListItem
+              key={item.label}
+              borderRadius="$6"
+              backgroundColor={subtleSurface}
+              borderWidth={1}
+              borderColor={statBorder}
+              icon={item.icon}
+              pressTheme
+            >
+              <ListItem.Text numberOfLines={1} color={primaryText}>{item.label}</ListItem.Text>
+            </ListItem>
+          ))}
+        </YStack>
 
-        <YStack gap="$3" marginTop="auto" paddingBottom="$6">
-          <Separator borderColor="rgba(148,124,255,0.2)" />
-          <Button
-            justifyContent="flex-start"
+        <YStack gap="$2" marginTop="auto" paddingBottom="$6">
+          <Separator borderColor={dividerColor} />
+          <ListItem
+            borderRadius="$6"
             icon={Settings}
-            variant="ghost"
-            paddingHorizontal="$4"
-            paddingVertical="$3"
-            width="100%"
-            borderRadius="$5"
-            backgroundColor="rgba(148,124,255,0.12)"
+            backgroundColor={subtleSurface}
+            borderWidth={1}
+            borderColor={dividerColor}
+            pressTheme
           >
-            <Text numberOfLines={1}>Settings</Text>
-          </Button>
-          <Button
-            justifyContent="flex-start"
+            <ListItem.Text numberOfLines={1} color={primaryText}>Settings</ListItem.Text>
+          </ListItem>
+          <ListItem
+            borderRadius="$6"
             icon={LogOut}
-            variant="ghost"
-            paddingHorizontal="$4"
-            paddingVertical="$3"
-            width="100%"
-            borderRadius="$5"
-            backgroundColor="rgba(148,124,255,0.12)"
+            backgroundColor={subtleSurface}
+            borderWidth={1}
+            borderColor={dividerColor}
+            pressTheme
           >
-            <Text numberOfLines={1}>Logout</Text>
-          </Button>
+            <ListItem.Text numberOfLines={1} color={primaryText}>Logout</ListItem.Text>
+          </ListItem>
         </YStack>
       </YStack>
     </ScrollView>
   );
   const content = (
     <ScrollView
-      style={{ flex: 1, backgroundColor: '#f4f1ff' }}
+      style={{ flex: 1, backgroundColor }}
       contentContainerStyle={{ paddingHorizontal: BrandSpacing.gutter, paddingBottom: BrandSpacing.stackGap, gap: BrandSpacing.stackGap }}
     >
       <XStack ai="center" jc="space-between" mt="$4">
@@ -220,8 +238,8 @@ export default function HomeScreen() {
               </Avatar.Fallback>
             </Avatar>
             <YStack>
-              <Text fontSize={12} color="rgba(49,38,92,0.6)">Namaste,</Text>
-              <Text fontSize={16} fontFamily={BrandTypography.tagline.fontFamily}>
+              <Text fontSize={12} color={secondaryText}>Namaste,</Text>
+              <Text fontSize={16} fontFamily={BrandTypography.tagline.fontFamily} color={primaryText}>
                  {firstName}
               </Text>
             </YStack>
@@ -234,13 +252,13 @@ export default function HomeScreen() {
         </XStack>
       </XStack>
 
-      <Card padding="$5" bordered borderColor="rgba(148,124,255,0.25)" backgroundColor="#fff" gap="$4" shadowRadius={20} shadowColor="rgba(92,70,205,0.18)">
+      <Card padding="$5" bordered borderColor={cardBorder} backgroundColor={cardBackground} gap="$4" shadowRadius={20} shadowColor="rgba(92,70,205,0.18)">
         <YStack ai="center" gap="$3">
           <FamilyCardIllustration width={220} height={140} />
-          <Text fontSize={18} fontFamily={BrandTypography.tagline.fontFamily} color="rgba(68,42,160,1)" textAlign="center">
+          <Text fontSize={18} fontFamily={BrandTypography.tagline.fontFamily} color={primaryText} textAlign="center">
             You haven&apos;t joined a Parivar yet.
           </Text>
-          <Paragraph textAlign="center" color="rgba(67,54,115,0.7)" fontSize={14}>
+          <Paragraph textAlign="center" color={secondaryText} fontSize={14}>
             Join or create a parivar to share updates, celebrate milestones, and stay close to your people.
           </Paragraph>
         </YStack>
@@ -248,26 +266,26 @@ export default function HomeScreen() {
           <Button flex={1} size="$3" theme="accent">
             Join Parivar
           </Button>
-          <Button flex={1} size="$3" variant="outlined" borderColor="rgba(148,124,255,0.4)">
+          <Button flex={1} size="$3" variant="outlined" borderColor={accentButtonBorder}>
             Create Parivar
           </Button>
         </XStack>
       </Card>
 
-      <Card padding="$4" bordered borderColor="rgba(148,124,255,0.25)" backgroundColor="#efe9ff" gap="$3">
-        <Text textAlign="center" color="rgba(148,124,255,0.8)" fontWeight="600" fontSize={14}>
+      <Card padding="$4" bordered borderColor={cardBorder} backgroundColor={quoteCardBg} gap="$3">
+        <Text textAlign="center" color={quoteAccent} fontWeight="600" fontSize={14}>
           {mockQuote.category}
         </Text>
-        <Paragraph textAlign="center" color="rgba(49,38,92,0.75)" fontSize={14}>
+        <Paragraph textAlign="center" color={quoteText} fontSize={14}>
           “{mockQuote.text}”
         </Paragraph>
-        <Text textAlign="center" color="rgba(49,38,92,0.5)" fontSize={13}>
+        <Text textAlign="center" color={quoteAuthor} fontSize={13}>
           — {mockQuote.author}
         </Text>
       </Card>
 
       <YStack gap="$3">
-        <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16}>
+        <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={primaryText}>
           Quick Stats
         </Text>
         <XStack flexWrap="wrap" gap="$3">
@@ -275,13 +293,13 @@ export default function HomeScreen() {
             <Card
               key={card.title}
               bordered
-              borderColor="rgba(148,124,255,0.2)"
-              backgroundColor="#fff"
+              borderColor={statBorder}
+              backgroundColor={statCardBg}
               padding="$4"
               width="48%"
               gap="$2"
             >
-              <Text color="rgba(49,38,92,0.8)" fontWeight="600" fontSize={14}>
+              <Text color={primaryText} fontWeight="600" fontSize={14}>
                 {card.title}
               </Text>
               <Text fontSize={22} fontWeight="700" color={card.accent}>
@@ -305,12 +323,12 @@ export default function HomeScreen() {
       drawerWidth={drawerWidth}
       renderNavigationView={() => drawerContent}
     >
-      <SafeAreaView style={{ flex: 1 }}>{content}</SafeAreaView>
+      <SafeAreaView style={{ flex: 1, backgroundColor }}>{content}</SafeAreaView>
     </DrawerLayoutAndroid>
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f1ff' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor }}>
       {Platform.OS === 'android' ? drawerLayout : content}
       {Platform.OS !== 'android' && (
         <Modal
@@ -319,7 +337,7 @@ export default function HomeScreen() {
           transparent
           onRequestClose={closeDrawer}
         >
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', flexDirection: 'row' }}>
+          <View style={{ flex: 1, backgroundColor: overlayShade, flexDirection: 'row' }}>
             <Animated.View
               {...panResponder.panHandlers}
               style={{
@@ -327,7 +345,7 @@ export default function HomeScreen() {
                 transform: [{ translateX: iosDrawerTranslate }],
               }}
             >
-              <View style={{ flex: 1, backgroundColor: '#f4f1ff', paddingTop: 48 }}>{drawerContent}</View>
+              <View style={{ flex: 1, backgroundColor, paddingTop: 48 }}>{drawerContent}</View>
             </Animated.View>
             <TouchableWithoutFeedback onPress={closeDrawer}>
               <View style={{ flex: 1 }} />

@@ -4,14 +4,14 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { doc, getDoc } from 'firebase/firestore';
 import { createContext, useEffect, useMemo, useState } from 'react';
 import 'react-native-reanimated';
 import { PortalProvider as TamaguiPortalProvider, TamaguiProvider, Theme } from 'tamagui';
-import { doc, getDoc } from 'firebase/firestore';
 
+import { firebaseAuth, firebaseDb } from '@/config/firebase';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import tamaguiConfig from '@/tamagui.config';
-import { firebaseAuth, firebaseDb } from '@/config/firebase';
 
 type ThemePreference = {
   themeName: 'light' | 'dark';
@@ -80,40 +80,45 @@ export default function RootLayout() {
   }, []);
 
   const stackInitialParams = useMemo(() => ({ profileName }), [profileName]);
+  const preferenceValue = useMemo(() => ({ themeName, setThemeName }), [themeName]);
+
+  useEffect(() => {
+    setThemeName(colorScheme ?? "light");
+  }, [colorScheme]);
 
   if (!fontsLoaded) {
     return null;
   }
 
   return (
-    <ThemePreferenceContext.Provider value={{ themeName, setThemeName }}>
+    <ThemePreferenceContext.Provider value={preferenceValue}>
       <TamaguiProvider config={tamaguiConfig} defaultTheme={themeName}>
-      <GorhomPortalProvider>
-        <TamaguiPortalProvider>
-          <ThemeProvider value={themeName === 'dark' ? DarkTheme : DefaultTheme}>
-            <Theme name={themeName}>
-              <Stack initialRouteName={initialRoute}>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="intro/index" options={{ headerShown: false }} />
-                <Stack.Screen name="auth/otp" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="onboarding/index"
-                  options={{ headerShown: false }}
-                  initialParams={stackInitialParams}
-                />
-                <Stack.Screen
-                  name="(tabs)"
-                  options={{ headerShown: false }}
-                  initialParams={stackInitialParams}
-                />
-                <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-              </Stack>
-              <StatusBar style="auto" />
-            </Theme>
-          </ThemeProvider>
-        </TamaguiPortalProvider>
-      </GorhomPortalProvider>
-    </TamaguiProvider>
+        <GorhomPortalProvider>
+          <TamaguiPortalProvider>
+            <ThemeProvider value={themeName === 'dark' ? DarkTheme : DefaultTheme}>
+              <Theme  name={themeName}>
+                <Stack initialRouteName={initialRoute}>
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen name="intro/index" options={{ headerShown: false }} />
+                  <Stack.Screen name="auth/otp" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="onboarding/index"
+                    options={{ headerShown: false }}
+                    initialParams={stackInitialParams}
+                  />
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ headerShown: false }}
+                    initialParams={stackInitialParams}
+                  />
+                  <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+                </Stack>
+                <StatusBar style="auto" />
+              </Theme>
+            </ThemeProvider>
+          </TamaguiPortalProvider>
+        </GorhomPortalProvider>
+      </TamaguiProvider>
     </ThemePreferenceContext.Provider>
   );
 }
