@@ -1,9 +1,10 @@
 import { ComponentType, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
-import PagerView from 'react-native-pager-view';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { Button, Text, XStack, YStack } from 'tamagui';
 
+import CarouselPager from './intro-carousel-pager';
+import type { PagerHandle } from './intro-carousel-pager';
 import {
   BrandSpacing,
   BrandTypography,
@@ -108,7 +109,7 @@ function IntroSlide({
 }
 
 export function IntroCarousel({ onDone }: IntroCarouselProps) {
-  const pagerRef = useRef<PagerView>(null);
+  const pagerRef = useRef<PagerHandle>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const colorScheme = useColorScheme() ?? 'light';
   const colors = BrandColors[colorScheme];
@@ -127,11 +128,27 @@ export function IntroCarousel({ onDone }: IntroCarouselProps) {
 
   return (
     <YStack f={1} bg="$background" paddingTop="$8" paddingBottom="$6">
-      <PagerView
+      <XStack paddingHorizontal={BrandSpacing.gutter} justifyContent="flex-end">
+        {activeIndex < slides.length - 1 && (
+          <Button
+            size="$3"
+            variant="ghost"
+            onPress={onDone}
+            borderWidth={0}
+            backgroundColor="transparent"
+            color={colors.tint}
+          >
+            Skip
+          </Button>
+        )}
+      </XStack>
+
+      <CarouselPager
         style={{ flex: 1, width }}
         initialPage={0}
         ref={pagerRef}
-        onPageSelected={(event) => setActiveIndex(event.nativeEvent.position)}
+        width={width}
+        onPageSelected={(index) => setActiveIndex(index)}
       >
         {slides.map((slide, index) => {
           const { key, ...slideProps } = slide;
@@ -141,7 +158,7 @@ export function IntroCarousel({ onDone }: IntroCarouselProps) {
             </YStack>
           );
         })}
-      </PagerView>
+      </CarouselPager>
 
       <YStack paddingHorizontal={BrandSpacing.gutter} gap="$4" mt="$4">
         <XStack ai="center" jc="center" gap="$2">
@@ -161,11 +178,6 @@ export function IntroCarousel({ onDone }: IntroCarouselProps) {
           {nextLabel}
         </Button>
 
-        {activeIndex < slides.length - 1 && (
-          <Button size="$3" variant="outlined" onPress={onDone}>
-            Skip
-          </Button>
-        )}
       </YStack>
     </YStack>
   );

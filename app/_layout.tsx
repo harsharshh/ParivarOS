@@ -4,7 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import 'react-native-reanimated';
 import { useEffect } from 'react';
-import { TamaguiProvider, Theme } from 'tamagui';
+import { PortalProvider as GorhomPortalProvider } from '@gorhom/portal';
+import { TamaguiProvider, Theme, PortalProvider as TamaguiPortalProvider } from 'tamagui';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -41,17 +42,23 @@ export default function RootLayout() {
 
   return (
     <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme ?? 'light'}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Theme name={colorScheme ?? 'light'}>
-          <Stack initialRouteName="index">
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="intro/index" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-          </Stack>
-          <StatusBar style="auto" />
-        </Theme>
-      </ThemeProvider>
+      <GorhomPortalProvider>
+        <TamaguiPortalProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Theme name={colorScheme ?? 'light'}>
+              <Stack initialRouteName="index">
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="intro/index" options={{ headerShown: false }} />
+                <Stack.Screen name="auth/otp" options={{ headerShown: false }} />
+                <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+              </Stack>
+              <StatusBar style="auto" />
+            </Theme>
+          </ThemeProvider>
+        </TamaguiPortalProvider>
+      </GorhomPortalProvider>
     </TamaguiProvider>
   );
 }

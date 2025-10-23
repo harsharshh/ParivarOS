@@ -48,6 +48,16 @@
       "router": {},
       "eas": {
         "projectId": "8b6edc14-a3d0-436b-873a-94624ad4756e"
+      },
+      "firebase": {
+        "apiKey": "AIzaSyDx1uvHR8HHRxcE6w_1oS-jlsGr-_6YAy8",
+        "authDomain":"parivaros.firebaseapp.com",
+        "projectId": "parivaros",
+        "storageBucket": "parivaros.firebasestorage.app",
+        "messagingSenderId": "283224509905",
+        "appId": "1:283224509905:web:9f039432922c3a142924f0",
+        "measurementId": "G-8C58X5YC2T",
+        "webClientId": "283224509905-78kptg4dj4qk70ffk3nq4q6jrbg8b7st.apps.googleusercontent.com"
       }
     },
     "owner": "harsharsh"
