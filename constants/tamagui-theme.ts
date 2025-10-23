@@ -31,6 +31,37 @@ export const lightPalette = [
   'hsla(0, 15%, 1%, 1)',
 ];
 
+export const accentPalette = {
+  dark: [
+    'hsla(21, 50%, 35%, 1)',
+    'hsla(21, 50%, 38%, 1)',
+    'hsla(21, 50%, 41%, 1)',
+    'hsla(21, 50%, 43%, 1)',
+    'hsla(21, 50%, 46%, 1)',
+    'hsla(21, 50%, 49%, 1)',
+    'hsla(21, 50%, 52%, 1)',
+    'hsla(21, 50%, 54%, 1)',
+    'hsla(21, 50%, 57%, 1)',
+    'hsla(21, 50%, 60%, 1)',
+    'hsla(250, 50%, 90%, 1)',
+    'hsla(250, 50%, 95%, 1)',
+  ],
+  light: [
+    'hsla(21, 50%, 61%, 1)',
+    'hsla(21, 50%, 61%, 1)',
+    'hsla(21, 50%, 62%, 1)',
+    'hsla(21, 50%, 62%, 1)',
+    'hsla(21, 50%, 63%, 1)',
+    'hsla(21, 50%, 63%, 1)',
+    'hsla(21, 50%, 64%, 1)',
+    'hsla(21, 50%, 64%, 1)',
+    'hsla(21, 50%, 65%, 1)',
+    'hsla(21, 50%, 65%, 1)',
+    'hsla(250, 50%, 95%, 1)',
+    'hsla(250, 50%, 95%, 1)',
+  ],
+} as const;
+
 const lightShadows = {
   shadow1: 'rgba(0,0,0,0.04)',
   shadow2: 'rgba(0,0,0,0.08)',
@@ -78,8 +109,8 @@ const builtThemes = createThemes({
 
   accent: {
     palette: {
-      dark: ['hsla(30, 50%, 35%, 1)','hsla(30, 50%, 38%, 1)','hsla(30, 50%, 41%, 1)','hsla(30, 50%, 43%, 1)','hsla(30, 50%, 46%, 1)','hsla(30, 50%, 49%, 1)','hsla(30, 50%, 52%, 1)','hsla(30, 50%, 54%, 1)','hsla(30, 50%, 57%, 1)','hsla(30, 50%, 60%, 1)','hsla(250, 50%, 90%, 1)','hsla(250, 50%, 95%, 1)'],
-      light: ['hsla(30, 50%, 47%, 1)','hsla(30, 50%, 49%, 1)','hsla(30, 50%, 51%, 1)','hsla(30, 50%, 53%, 1)','hsla(30, 50%, 55%, 1)','hsla(30, 50%, 57%, 1)','hsla(30, 50%, 59%, 1)','hsla(30, 50%, 61%, 1)','hsla(30, 50%, 63%, 1)','hsla(30, 50%, 65%, 1)','hsla(250, 50%, 95%, 1)','hsla(250, 50%, 95%, 1)'],
+      dark: accentPalette.dark,
+      light: accentPalette.light,
     },
   },
 
@@ -118,17 +149,22 @@ export const ThemeColors = {
   light: {
     text: lightPalette[10],
     background: lightPalette[0],
-    tint: 'hsla(250, 50%, 46%, 1)',
-    icon: lightPalette[7],
-    tabIconDefault: lightPalette[8],
-    tabIconSelected: 'hsla(250, 50%, 46%, 1)',
+    tint: accentPalette.dark[0],
+    accent: accentPalette.light[4],
+    accentForeground: lightPalette[11],
+    icon: lightPalette[6],
+    tabIconDefault: lightPalette[7],
+    tabIconSelected: accentPalette.dark[0],
   },
   dark: {
     text: darkPalette[10],
     background: darkPalette[0],
-    tint: 'hsla(250, 50%, 57%, 1)',
+    tint: accentPalette.dark[4],
+    accent: accentPalette.dark[8],
+    accentForeground: darkPalette[0],
     icon: darkPalette[6],
     tabIconDefault: darkPalette[5],
-    tabIconSelected: 'hsla(250, 50%, 57%, 1)',
+    tabIconSelected: accentPalette.dark[4],
   },
-};
+} as const;
+

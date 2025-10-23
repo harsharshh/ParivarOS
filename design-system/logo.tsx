@@ -12,6 +12,7 @@ import Svg, {
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { BrandColors, BrandTypography } from './tokens';
+import { withAlpha } from '@/utils/color';
 
 type LogoProps = {
   size?: number;
@@ -23,6 +24,9 @@ export const BrandLogoMark = memo(function BrandLogoMark({ size = 164, style }: 
   const gradientId = useId();
   const highlightId = useId();
   const colors = BrandColors[colorScheme];
+  const highlightStart = withAlpha(colors.accentForeground, 0.95);
+  const highlightEnd = withAlpha(colors.accentForeground, 0.78);
+  const haloFill = withAlpha(colors.accentForeground, 0.82);
 
   return (
     <Svg
@@ -46,8 +50,8 @@ export const BrandLogoMark = memo(function BrandLogoMark({ size = 164, style }: 
           y2="176"
           gradientUnits="userSpaceOnUse"
         >
-          <Stop offset="0" stopColor="rgba(255,255,255,0.96)" />
-          <Stop offset="1" stopColor="rgba(255,255,255,0.78)" />
+          <Stop offset="0" stopColor={highlightStart} />
+          <Stop offset="1" stopColor={highlightEnd} />
         </LinearGradient>
       </Defs>
 
@@ -56,9 +60,9 @@ export const BrandLogoMark = memo(function BrandLogoMark({ size = 164, style }: 
         d="M88 96C78.059 96 70 104.059 70 114c0 31.5 58 74 58 74s58-42.5 58-74c0-9.941-8.059-18-18-18s-18 8.059-18 18c0-9.941-8.059-18-18-18s-18 8.059-18 18c0-9.941-8.059-18-18-18h-8Z"
         fill={`url(#${highlightId})`}
       />
-      <Circle cx="92" cy="92" r="18" fill="rgba(255,255,255,0.85)" />
-      <Circle cx="128" cy="92" r="18" fill="rgba(255,255,255,0.78)" />
-      <Circle cx="164" cy="92" r="18" fill="rgba(255,255,255,0.85)" />
+      <Circle cx="92" cy="92" r="18" fill={haloFill} />
+      <Circle cx="128" cy="92" r="18" fill={withAlpha(colors.accentForeground, 0.76)} />
+      <Circle cx="164" cy="92" r="18" fill={haloFill} />
     </Svg>
   );
 });
@@ -74,6 +78,7 @@ export const BrandWordmark = memo(function BrandWordmark({ height = 72, style }:
   const colors = BrandColors[colorScheme];
   const aspectRatio = 640 / 200;
   const width = height * aspectRatio;
+  const plaqueFill = withAlpha(colors.tint, colorScheme === 'dark' ? 0.18 : 0.12);
 
   return (
     <Svg
@@ -91,7 +96,7 @@ export const BrandWordmark = memo(function BrandWordmark({ height = 72, style }:
         </LinearGradient>
       </Defs>
 
-      <Rect x="16" y="32" width="608" height="136" rx="24" fill="rgba(107,92,255,0.12)" />
+      <Rect x="16" y="32" width="608" height="136" rx="24" fill={plaqueFill} />
       <SvgText
         x="64"
         y="120"

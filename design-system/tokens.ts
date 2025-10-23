@@ -1,15 +1,23 @@
 import { Colors } from '@/constants/theme';
+import { accentPalette } from '@/constants/tamagui-theme';
+import { withAlpha } from '@/utils/color';
 
 export const BrandColors = Colors;
 
 export const BrandGradients = {
   primary: {
-    light: [Colors.light.tint, Colors.light.text],
-    dark: [Colors.dark.tint, Colors.dark.text],
+    light: [Colors.light.tint, Colors.light.accent],
+    dark: [Colors.dark.tint, Colors.dark.accent],
   },
   subtle: {
-    light: ['rgba(107,92,255,0.16)', 'rgba(148,124,255,0.16)'],
-    dark: ['rgba(107,92,255,0.32)', 'rgba(148,124,255,0.32)'],
+    light: [
+      withAlpha(accentPalette.light[2], 0.18),
+      withAlpha(accentPalette.light[4], 0.18),
+    ],
+    dark: [
+      withAlpha(accentPalette.dark[2], 0.28),
+      withAlpha(accentPalette.dark[4], 0.28),
+    ],
   },
 };
 

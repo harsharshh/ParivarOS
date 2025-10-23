@@ -5,7 +5,8 @@ import { Stack } from 'expo-router';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { doc, getDoc } from 'firebase/firestore';
-import { createContext, useEffect, useMemo, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import 'react-native-reanimated';
 import { PortalProvider as TamaguiPortalProvider, TamaguiProvider, Theme } from 'tamagui';
 
@@ -17,6 +18,8 @@ type ThemePreference = {
   themeName: 'light' | 'dark';
   setThemeName: (value: 'light' | 'dark') => void;
 };
+
+const THEME_STORAGE_KEY = 'parivaros.theme';
 
 export const ThemePreferenceContext = createContext<ThemePreference>({
   themeName: 'light',
@@ -33,7 +36,9 @@ void ExpoSplashScreen.preventAutoHideAsync().catch(() => {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [themeName, setThemeName] = useState<'light' | 'dark'>(colorScheme ?? 'light');
+  const [themeName, setThemeNameState] = useState<'light' | 'dark'>(colorScheme ?? 'light');
+  const [isThemeHydrated, setThemeHydrated] = useState(false);
+  const [hasUserPreference, setHasUserPreference] = useState(false);
   const [initialRoute, setInitialRoute] = useState<string>('index');
   const [profileName, setProfileName] = useState<string | null>(null);
   const [fontsLoaded] = useFonts({
@@ -50,6 +55,24 @@ export default function RootLayout() {
       });
     }
   }, [fontsLoaded]);
+
+  useEffect(() => {
+    const loadThemePreference = async () => {
+      try {
+        const storedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+        if (storedTheme === 'light' || storedTheme === 'dark') {
+          setThemeNameState(storedTheme);
+          setHasUserPreference(true);
+        }
+      } catch (error) {
+        console.warn('Failed to load theme preference', error);
+      } finally {
+        setThemeHydrated(true);
+      }
+    };
+
+    void loadThemePreference();
+  }, []);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -80,13 +103,32 @@ export default function RootLayout() {
   }, []);
 
   const stackInitialParams = useMemo(() => ({ profileName }), [profileName]);
-  const preferenceValue = useMemo(() => ({ themeName, setThemeName }), [themeName]);
+  const handleSetThemeName = useCallback(
+    (value: 'light' | 'dark') => {
+      setThemeNameState(value);
+      setHasUserPreference(true);
+      void AsyncStorage.setItem(THEME_STORAGE_KEY, value).catch((error) => {
+        console.warn('Failed to persist theme preference', error);
+      });
+    },
+    []
+  );
+
+  const preferenceValue = useMemo(
+    () => ({
+      themeName,
+      setThemeName: handleSetThemeName,
+    }),
+    [handleSetThemeName, themeName]
+  );
 
   useEffect(() => {
-    setThemeName(colorScheme ?? "light");
-  }, [colorScheme]);
+    if (colorScheme && !hasUserPreference) {
+      setThemeNameState(colorScheme);
+    }
+  }, [colorScheme, hasUserPreference]);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || !isThemeHydrated) {
     return null;
   }
 

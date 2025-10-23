@@ -15,6 +15,7 @@ import {
   BrandColors,
 } from '@/design-system';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { withAlpha } from '@/utils/color';
 
 type SlideContent = {
   title: string;
@@ -114,7 +115,7 @@ export function IntroCarousel({ onDone }: IntroCarouselProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = BrandColors[colorScheme];
   const { width } = useWindowDimensions();
-  const inactiveIndicator = colorScheme === 'dark' ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.18)';
+  const inactiveIndicator = withAlpha(colors.text, colorScheme === 'dark' ? 0.32 : 0.18);
 
   const handleNext = useCallback(() => {
     if (activeIndex < slides.length - 1) {
@@ -134,8 +135,6 @@ export function IntroCarousel({ onDone }: IntroCarouselProps) {
             size="$3"
             variant="ghost"
             onPress={onDone}
-            borderWidth={0}
-            backgroundColor="transparent"
             color={colors.tint}
           >
             Skip

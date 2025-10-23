@@ -27,7 +27,8 @@ export default function ConnectScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
       contentContainerStyle={{
         paddingHorizontal: BrandSpacing.gutter,
-        paddingVertical: BrandSpacing.stackGap,
+        paddingTop: BrandSpacing.stackGap,
+        paddingBottom: BrandSpacing.stackGap,
         gap: BrandSpacing.stackGap,
       }}
     >

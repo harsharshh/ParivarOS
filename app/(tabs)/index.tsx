@@ -1,14 +1,15 @@
+import { Bell } from '@tamagui/lucide-icons';
+import { doc, getDoc } from 'firebase/firestore';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Avatar, Button, Card, Paragraph, Text, XStack, YStack } from 'tamagui';
-import { Bell } from '@tamagui/lucide-icons';
-import { doc, getDoc } from 'firebase/firestore';
 
+import { ThemePreferenceContext } from '@/app/_layout';
 import { FamilyCardIllustration } from '@/assets/images/family-card-illustration';
 import { firebaseAuth, firebaseDb } from '@/config/firebase';
+import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography } from '@/design-system';
-import { ThemePreferenceContext } from '@/app/_layout';
-import { ThemeColors, darkPalette, lightPalette } from '@/constants/tamagui-theme';
+import { withAlpha } from '@/utils/color';
 
 const summaryCards = [
   { title: 'Parivar Circles', count: 0, accentIndex: 8 },
@@ -24,17 +25,20 @@ export default function HomeScreen() {
 
   const [profileName, setProfileName] = useState<string>('Parivar Friend');
 
-  const colors = useMemo(
-    () => ({
+  const colors = useMemo(() => {
+    const accentSpectrum = accentPalette[themeName];
+    return {
       background: palette.background,
       card: basePalette[themeName === 'dark' ? 3 : 1],
       border: basePalette[themeName === 'dark' ? 6 : 7],
       accent: palette.tint,
+      accentSoft: accentSpectrum[themeName === 'dark' ? 4 : 2],
       text: palette.text,
       secondary: basePalette[themeName === 'dark' ? 9 : 6],
-    }),
-    [palette, basePalette, themeName]
-  );
+      avatarText: palette.accentForeground,
+      shadow: withAlpha(palette.tint, themeName === 'dark' ? 0.25 : 0.18),
+    };
+  }, [basePalette, palette, themeName]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -71,16 +75,17 @@ export default function HomeScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
       contentContainerStyle={{
         paddingHorizontal: BrandSpacing.gutter,
+        paddingTop: BrandSpacing.stackGap,
         paddingBottom: BrandSpacing.stackGap,
         gap: BrandSpacing.stackGap,
       }}
     >
       <XStack ai="center" jc="space-between" mt="$4">
         <XStack ai="center" gap="$3">
-          <Avatar size="$4" circular bg="rgba(148,124,255,0.9)" ai="center" jc="center">
+          <Avatar size="$4" circular bg={colors.accentSoft} ai="center" jc="center">
             <Avatar.Image src={firebaseAuth?.currentUser?.photoURL ?? undefined} />
             <Avatar.Fallback ai="center" jc="center">
-              <Text color="#fff" fontWeight="700" textAlign="center">
+              <Text color={colors.avatarText} fontWeight="700" textAlign="center">
                 {firstName.charAt(0).toUpperCase()}
               </Text>
             </Avatar.Fallback>
@@ -96,9 +101,9 @@ export default function HomeScreen() {
         <Button size="$3" circular variant="outlined" icon={Bell} />
       </XStack>
 
-      <Card padding="$5" bordered borderColor={colors.border} backgroundColor={colors.card} gap="$4" shadowColor="rgba(92,70,205,0.18)" shadowRadius={20}>
+      <Card padding="$5" bordered borderColor={colors.border} backgroundColor={colors.card} gap="$4" shadowColor={colors.shadow} shadowRadius={20}>
         <YStack ai="center" gap="$3">
-          <FamilyCardIllustration width={220} height={140} />
+          <FamilyCardIllustration width={220} height={140} theme={themeName} accentStart={palette.tint} accentEnd={palette.accent} />
           <Text fontSize={18} fontFamily={BrandTypography.tagline.fontFamily} color={colors.text} textAlign="center">
             You haven&apos;t joined a Parivar yet.
           </Text>

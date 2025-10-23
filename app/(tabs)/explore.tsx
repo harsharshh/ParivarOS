@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { useContext, useMemo } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 
 import { Collapsible } from '@/components/ui/collapsible';
@@ -8,15 +9,29 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Fonts } from '@/constants/theme';
+import { ThemePreferenceContext } from '@/app/_layout';
+import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
+import { withAlpha } from '@/utils/color';
 
 export default function TabTwoScreen() {
+  const { themeName } = useContext(ThemePreferenceContext);
+  const palette = ThemeColors[themeName];
+
+  const headerBackgroundColor = useMemo(
+    () => ({
+      light: withAlpha(accentPalette.light[2], 0.24),
+      dark: withAlpha(accentPalette.dark[2], 0.28),
+    }),
+    []
+  );
+
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
+      headerBackgroundColor={headerBackgroundColor}
       headerImage={
         <IconSymbol
           size={310}
-          color="#808080"
+          color={palette.icon}
           name="chevron.left.forwardslash.chevron.right"
           style={styles.headerImage}
         />
@@ -100,7 +115,6 @@ export default function TabTwoScreen() {
 
 const styles = StyleSheet.create({
   headerImage: {
-    color: '#808080',
     bottom: -90,
     left: -35,
     position: 'absolute',

@@ -1,8 +1,12 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="brandGradient" x1="44" y1="36" x2="220" y2="220" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#6B5CFF"/>
-      <stop offset="1" stop-color="#947CFF"/>
+      <stop offset="0" stop-color="#715EFF"/>
+      <stop offset="1" stop-color="#9F83FF"/>
+    </linearGradient>
+    <linearGradient id="brandGradientDark" x1="44" y1="36" x2="220" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8D79FF"/>
+      <stop offset="1" stop-color="#4032A6"/>
     </linearGradient>
     <linearGradient id="heartGradient" x1="128" y1="88" x2="128" y2="176" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="rgba(255,255,255,0.92)"/>
