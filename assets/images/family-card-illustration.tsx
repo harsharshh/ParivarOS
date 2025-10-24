@@ -1,6 +1,7 @@
 import Svg, { Rect, Circle, Path, LinearGradient, Stop, Defs } from 'react-native-svg';
 
 import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
+import { withAlpha } from '@/utils/color';
 
 type FamilyCardIllustrationProps = {
   width?: number;
@@ -21,16 +22,23 @@ export function FamilyCardIllustration({
   const basePalette = theme === 'dark' ? darkPalette : lightPalette;
   const accentSpectrum = accentPalette[theme];
 
-  const resolvedAccentStart = accentStart ?? accentSpectrum[4];
-  const resolvedAccentEnd = accentEnd ?? accentSpectrum[6];
+  const resolvedAccentStart = accentStart ?? accentSpectrum[theme === 'dark' ? 7 : 4];
+  const resolvedAccentEnd = accentEnd ?? accentSpectrum[theme === 'dark' ? 9 : 6];
 
-  const gradientStart = theme === 'dark' ? resolvedAccentEnd : basePalette[1];
-  const gradientEnd = theme === 'dark' ? resolvedAccentStart : accentSpectrum[2];
-  const circleBase = accentSpectrum[5];
-  const circleBaseSecondary = accentSpectrum[7];
-  const subtleCircle = basePalette[theme === 'dark' ? 3 : 7];
-  const highlight = theme === 'dark' ? basePalette[9] : themePalette.background;
-  const strokeAccent = accentSpectrum[8];
+  const gradientStart =
+    theme === 'dark' ? accentSpectrum[9] : basePalette[1];
+  const gradientEnd = theme === 'dark' ? accentSpectrum[7] : accentSpectrum[2];
+  const circleBase = accentSpectrum[theme === 'dark' ? 8 : 5];
+  const circleBaseSecondary = accentSpectrum[theme === 'dark' ? 10 : 7];
+  const subtleCircle =
+    theme === 'dark'
+      ? withAlpha(accentSpectrum[11], 0.4)
+      : accentSpectrum[3];
+  const highlight =
+    theme === 'dark'
+      ? withAlpha(themePalette.accentForeground, 0.92)
+      : themePalette.background;
+  const strokeAccent = accentSpectrum[theme === 'dark' ? 6 : 8];
 
   return (
     <Svg width={width} height={height} viewBox="0 0 220 140" fill="none">

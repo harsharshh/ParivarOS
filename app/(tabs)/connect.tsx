@@ -31,6 +31,7 @@ export default function ConnectScreen() {
         paddingBottom: BrandSpacing.stackGap,
         gap: BrandSpacing.stackGap,
       }}
+      showsVerticalScrollIndicator={false}
     >
       <YStack gap="$4">
         <Text

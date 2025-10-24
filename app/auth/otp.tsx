@@ -20,6 +20,7 @@ import {
   isFirebaseConfigured,
 } from '@/config/firebase';
 import { BrandLogoMark, BrandSpacing, BrandTypography } from '@/design-system';
+import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 const DEFAULT_DIAL_CODE = '+91';
@@ -40,11 +41,13 @@ export default function OtpAuthScreen() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const themePalette = ThemeColors[colorScheme];
+  const accentSpectrum = accentPalette[colorScheme];
   const gradientColors = useMemo(() => {
     return colorScheme === 'dark'
-      ? ['rgba(12,10,28,1)', 'rgba(28,24,64,0.92)']
-      : ['rgba(232,228,255,1)', 'rgba(195,185,255,0.92)'];
-  }, [colorScheme]);
+      ? [accentSpectrum[5], accentSpectrum[8]]
+      : [themePalette.background, accentSpectrum[2]];
+  }, [accentSpectrum, colorScheme, themePalette.background]);
 
   const ensureWebRecaptcha = useCallback(() => {
     if (Platform.OS !== 'web' || !firebaseReady || !firebaseAuth || typeof document === 'undefined') {

@@ -70,6 +70,7 @@ export default function AvatarScreen() {
         paddingBottom: BrandSpacing.stackGap,
         gap: BrandSpacing.stackGap,
       }}
+      showsVerticalScrollIndicator={false}
     >
       <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={22} fontWeight='700' color={colors.text}>
         My Profile

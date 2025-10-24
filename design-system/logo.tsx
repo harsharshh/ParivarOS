@@ -12,6 +12,7 @@ import Svg, {
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { withAlpha } from '@/utils/color';
+import { accentPalette } from '@/constants/tamagui-theme';
 import { BrandColors, BrandTypography } from './tokens';
 
 type LogoProps = {
@@ -24,9 +25,11 @@ export const BrandLogoMark = memo(function BrandLogoMark({ size = 164, style }: 
   const gradientId = useId();
   const highlightId = useId();
   const colors = BrandColors[colorScheme];
-  const highlightStart = withAlpha(colors.accentForeground, 0.95);
-  const highlightEnd = withAlpha(colors.accentForeground, 0.78);
-  const haloFill = withAlpha(colors.accentForeground, 0.82);
+  const accentSpectrum = accentPalette[colorScheme];
+  const highlightStart = withAlpha(accentSpectrum[colorScheme === 'dark' ? 8 : 4], colorScheme === 'dark' ? 0.82 : 0.68);
+  const highlightEnd = withAlpha(accentSpectrum[colorScheme === 'dark' ? 5 : 3], colorScheme === 'dark' ? 0.74 : 0.56);
+  const haloFill = withAlpha(accentSpectrum[colorScheme === 'dark' ? 9 : 5], colorScheme === 'dark' ? 0.55 : 0.38);
+  const centerGlow = withAlpha(accentSpectrum[colorScheme === 'dark' ? 7 : 4], colorScheme === 'dark' ? 0.65 : 0.42);
 
   return (
     <Svg
@@ -61,7 +64,7 @@ export const BrandLogoMark = memo(function BrandLogoMark({ size = 164, style }: 
         fill={`url(#${highlightId})`}
       />
       <Circle cx="92" cy="92" r="18" fill={haloFill} />
-      <Circle cx="128" cy="92" r="18" fill={withAlpha(colors.accentForeground, 0.76)} />
+      <Circle cx="128" cy="92" r="18" fill={centerGlow} />
       <Circle cx="164" cy="92" r="18" fill={haloFill} />
     </Svg>
   );

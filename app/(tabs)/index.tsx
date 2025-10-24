@@ -1,7 +1,7 @@
 import { Bell } from '@tamagui/lucide-icons';
 import { doc, getDoc } from 'firebase/firestore';
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, Card, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -9,14 +9,150 @@ import { ThemePreferenceContext } from '@/app/_layout';
 import { FamilyCardIllustration } from '@/assets/images/family-card-illustration';
 import { firebaseAuth, firebaseDb } from '@/config/firebase';
 import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
-import { BrandSpacing, BrandTypography } from '@/design-system';
+import { BrandSpacing, BrandTypography, StatsCard, ModuleCard } from '@/design-system';
 import { withAlpha } from '@/utils/color';
 
-const summaryCards = [
-  { title: 'Parivar Circles', count: 0, accentIndex: 8 },
-  { title: 'Parivar Members', count: 1, accentIndex: 9 },
-  { title: 'Business Circles', count: 0, accentIndex: 7 },
-  { title: 'Upcoming Rituals', count: 0, accentIndex: 6 },
+const summaryCardDefinitions = [
+  { title: 'Parivar Members', value: '12', description: 'Loved ones connected' },
+  { title: 'Parivar Linked', value: '3', description: 'Families you follow' },
+  { title: 'Events', value: '5', description: 'Joyful moments ahead' },
+  { title: 'Health Reminders', value: '2', description: 'Care tasks scheduled' },
+];
+
+const familyModules = [
+  {
+    title: 'Kutumb Kendra',
+    subtitle: 'कुटुंब केन्द्र',
+    description: 'Family dashboard for birthdays, events, alerts.',
+  },
+  {
+    title: 'Parivar Vriksh',
+    subtitle: 'परिवार वृक्ष',
+    description: 'Core family tree with self, spouse, kids, parents.',
+  },
+  {
+    title: 'Smriti Mandal',
+    subtitle: 'स्मृति मण्डल',
+    description: 'Photos, videos, voice notes, and treasured moments.',
+  },
+  {
+    title: 'Shraddhanjali',
+    subtitle: 'श्रद्धांजलि',
+    description: 'Remembrance hub for ancestors and anniversaries.',
+  },
+  {
+    title: 'Sanskaar Dhan',
+    subtitle: 'संस्कार धन',
+    description: 'Culture, recipes, family values, and rituals archive.',
+  },
+  {
+    title: 'Baithak',
+    subtitle: 'बैठक',
+    description: 'Private family chat with shared daily planner.',
+  },
+  {
+    title: 'Sparsh+',
+    subtitle: 'स्पर्श',
+    description: 'Elder-care companion with voice-first updates.',
+  },
+  {
+    title: 'ManMandal',
+    subtitle: 'मनमण्डल',
+    description: 'Emotional check-ins and wellbeing insights.',
+  },
+  {
+    title: 'Aarogya Bandhan',
+    subtitle: 'आरोग्य बन्धन',
+    description: 'Health tracker with medicine reminders and vitals.',
+  },
+  {
+    title: 'SevaBank',
+    subtitle: 'सेवा बैंक',
+    description: 'Family gratitude, help, and support tracker.',
+  },
+  {
+    title: 'Suraksha Kavach',
+    subtitle: 'सुरक्षा कवच',
+    description: 'SOS, geofence, and emergency contact alerts.',
+  },
+  {
+    title: 'GharSeva',
+    subtitle: 'घरसेवा',
+    description: 'Household chores, staff, and routine management.',
+  },
+  {
+    title: 'RasoiOS',
+    subtitle: 'रसोई ओएस',
+    description: 'Kitchen planner for groceries, inventory, recipes.',
+  },
+  {
+    title: 'Niyam',
+    subtitle: 'नियम',
+    description: 'Habits, reminders, and routine builder.',
+  },
+  {
+    title: 'KhataSmart',
+    subtitle: 'खाता स्मार्ट',
+    description: 'Family expenses, lending, and gifting ledger.',
+  },
+  {
+    title: 'GharPatrika',
+    subtitle: 'घरपत्रिका',
+    description: 'Secure locker for IDs, insurance, receipts.',
+  },
+  {
+    title: 'VastuSaathi',
+    subtitle: 'वास्तु साथी',
+    description: 'Home harmony and Vastu energy balancing guide.',
+  },
+  {
+    title: 'MandirOS',
+    subtitle: 'मंदिर ओएस',
+    description: 'Aarti, panchang, bhajans, and devotional reminders.',
+  },
+  {
+    title: 'Chhoti Duniya',
+    subtitle: 'छोटी दुनिया',
+    description: 'Kids’ zone with drawings, learning, and diary.',
+  },
+  {
+    title: 'MastiGhar',
+    subtitle: 'मस्तीघर',
+    description: 'Fun games and engagements for the whole family.',
+  },
+  {
+    title: 'KathaLok',
+    subtitle: 'कथालोक',
+    description: 'AI-crafted family stories from your memories.',
+  },
+  {
+    title: 'ParivarAI',
+    subtitle: 'परिवार एआई',
+    description: 'Family assistant for summaries, reminders, and chats.',
+  },
+];
+
+const bondingQuotes = [
+  { text: 'Family is not an important thing — it’s everything.', author: 'Michael J. Fox' },
+  {
+    text: 'In time of test, family is best.',
+    author: 'Burmese Proverb',
+  },
+  { text: 'The love of family is life’s greatest blessing.', author: 'Eva Burrows' },
+  { text: 'Where there is family, there is home.', author: 'Unknown' },
+  { text: 'We may have our differences, but nothing’s more important than family.', author: 'Miguel Ángel Silvestre' },
+  {
+    text: 'घर वही है जहाँ परिवार की मुस्कान बसती है।',
+    author: 'विक्रम सेठ',
+  },
+  {
+    text: 'परिवार के बिना जीवन अधूरा संगीत है।',
+    author: 'गुलज़ार',
+  },
+  {
+    text: 'परिवार संग बिताया पल ही असली धन है।',
+    author: 'अमृता प्रीतम',
+  },
 ];
 
 export default function HomeScreen() {
@@ -28,6 +164,14 @@ export default function HomeScreen() {
   const [profileName, setProfileName] = useState<string>('Parivar Friend');
   const [refreshing, setRefreshing] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
+
+  const handleSummaryPress = useCallback((title: string) => {
+    Alert.alert(title, 'Detailed insights are coming soon.');
+  }, []);
+
+  const handleModulePress = useCallback((title: string) => {
+    Alert.alert(title, 'This module is coming soon.');
+  }, []);
 
   const colors = useMemo(() => {
     const accentSpectrum = accentPalette[themeName];
@@ -41,6 +185,11 @@ export default function HomeScreen() {
       secondary: basePalette[themeName === 'dark' ? 9 : 6],
       avatarText: palette.accentForeground,
       shadow: withAlpha(palette.tint, themeName === 'dark' ? 0.25 : 0.18),
+      quoteBackground: withAlpha(
+        accentSpectrum[themeName === 'dark' ? 7 : 2],
+        themeName === 'dark' ? 0.36 : 0.18
+      ),
+      quoteText: accentSpectrum[themeName === 'dark' ? 10 : 4],
     };
   }, [basePalette, palette, themeName]);
 
@@ -85,6 +234,18 @@ export default function HomeScreen() {
 
   const headerPaddingTop = Math.max(insets.top, BrandSpacing.elementGap);
   const scrollPaddingTop = headerHeight > 0 ? headerHeight : headerPaddingTop + BrandSpacing.elementGap;
+  const bondingQuote = useMemo(
+    () => bondingQuotes[Math.floor(Math.random() * bondingQuotes.length)],
+    []
+  );
+  const summaryCards = useMemo(
+    () =>
+      summaryCardDefinitions.map((definition) => ({
+        ...definition,
+        onPress: () => handleSummaryPress(definition.title),
+      })),
+    [handleSummaryPress]
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -152,6 +313,7 @@ export default function HomeScreen() {
           paddingBottom: BrandSpacing.stackGap,
           gap: BrandSpacing.stackGap,
         }}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -181,51 +343,59 @@ export default function HomeScreen() {
         </XStack>
       </Card>
 
-      <Card padding="$4" bordered borderColor={colors.border} backgroundColor={basePalette[themeName === 'dark' ? 4 : 2]} gap="$3">
-        <Text textAlign="center" color={colors.accent} fontWeight="600" fontSize={14}>
-          Parivar Bonding
-        </Text>
-        <Paragraph textAlign="center" color={colors.secondary} fontSize={14}>
-          “Celebrating every story keeps the family close.”
-        </Paragraph>
-        <Text textAlign="center" color={colors.secondary} fontSize={13}>
-          — ParivarOS
-        </Text>
-      </Card>
+        <Card
+          padding="$4"
+          bordered
+          borderColor={colors.border}
+          backgroundColor={colors.quoteBackground}
+          gap="$2"
+        >
+          <Text textAlign="center" color={colors.accent} fontWeight="600" fontSize={13}>
+            Parivar Bonding
+          </Text>
+          <Text textAlign="center" color={colors.quoteText} fontSize={13} lineHeight={18} italic>
+            “{bondingQuote.text}”
+          </Text>
+          <Text textAlign="center" color={colors.secondary} fontSize={12}>
+            — {bondingQuote.author}
+          </Text>
+        </Card>
 
       <YStack gap="$3">
         <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
           Quick Stats
         </Text>
-        <XStack flexWrap="wrap" gap="$3">
+        <XStack gap="$3" flexWrap="wrap">
           {summaryCards.map((card) => (
-            <Card
+            <StatsCard
               key={card.title}
-              bordered
-              borderColor={colors.border}
-              backgroundColor={colors.card}
-              padding="$4"
-              width="48%"
-              gap="$2"
-            >
-              <Text color={colors.text} fontWeight="600" fontSize={14}>
-                {card.title}
-              </Text>
-              <Text fontSize={22} fontWeight="700" color={PaletteAccent(basePalette, card.accentIndex)}>
-                {card.count}
-              </Text>
-              <Button variant="ghost" justifyContent="flex-start" paddingHorizontal={0} size="$2">
-                View
-              </Button>
-            </Card>
+              title={card.title}
+              value={card.value}
+              description={card.description}
+              onPress={card.onPress}
+              layout="half"
+            />
+          ))}
+        </XStack>
+      </YStack>
+
+      <YStack gap="$3">
+        <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
+          Mera Parivar
+        </Text>
+        <XStack gap="$3" flexWrap="wrap">
+          {familyModules.map((module) => (
+            <ModuleCard
+              key={module.title}
+              title={module.title}
+              subtitle={module.subtitle}
+              description={module.description}
+              onPress={() => handleModulePress(module.title)}
+            />
           ))}
         </XStack>
       </YStack>
       </ScrollView>
     </View>
   );
-}
-
-function PaletteAccent(palette: readonly string[], index: number) {
-  return palette[index] ?? palette[palette.length - 1];
 }
