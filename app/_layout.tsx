@@ -12,6 +12,8 @@ import { PortalProvider as TamaguiPortalProvider, TamaguiProvider, Theme } from 
 
 import { firebaseAuth, firebaseDb } from '@/config/firebase';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useInitialPermissions } from '@/hooks/use-initial-permissions';
+import { PermissionsContext } from '@/hooks/use-permissions';
 import tamaguiConfig from '@/tamagui.config';
 
 type ThemePreference = {
@@ -41,6 +43,7 @@ export default function RootLayout() {
   const [hasUserPreference, setHasUserPreference] = useState(false);
   const [initialRoute, setInitialRoute] = useState<string>('index');
   const [profileName, setProfileName] = useState<string | null>(null);
+  const permissions = useInitialPermissions();
   const [fontsLoaded] = useFonts({
     Inter: require('@tamagui/font-inter/otf/Inter-Regular.otf'),
     'Inter Bold': require('@tamagui/font-inter/otf/Inter-Bold.otf'),
@@ -134,11 +137,12 @@ export default function RootLayout() {
 
   return (
     <ThemePreferenceContext.Provider value={preferenceValue}>
-      <TamaguiProvider config={tamaguiConfig} defaultTheme={themeName}>
-        <GorhomPortalProvider>
-          <TamaguiPortalProvider>
-            <ThemeProvider value={themeName === 'dark' ? DarkTheme : DefaultTheme}>
-              <Theme  name={themeName}>
+      <PermissionsContext.Provider value={permissions}>
+        <TamaguiProvider config={tamaguiConfig} defaultTheme={themeName}>
+          <GorhomPortalProvider>
+            <TamaguiPortalProvider>
+              <ThemeProvider value={themeName === 'dark' ? DarkTheme : DefaultTheme}>
+                <Theme  name={themeName}>
                 <Stack initialRouteName={initialRoute}>
                   <Stack.Screen name="index" options={{ headerShown: false }} />
                   <Stack.Screen name="intro/index" options={{ headerShown: false }} />
@@ -155,12 +159,13 @@ export default function RootLayout() {
                   />
                   <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
                 </Stack>
-                <StatusBar style="auto" />
-              </Theme>
-            </ThemeProvider>
-          </TamaguiPortalProvider>
-        </GorhomPortalProvider>
-      </TamaguiProvider>
+                  <StatusBar style="auto" />
+                </Theme>
+              </ThemeProvider>
+            </TamaguiPortalProvider>
+          </GorhomPortalProvider>
+        </TamaguiProvider>
+      </PermissionsContext.Provider>
     </ThemePreferenceContext.Provider>
   );
 }

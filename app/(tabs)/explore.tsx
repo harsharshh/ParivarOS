@@ -1,7 +1,8 @@
-import { useCallback, useContext, useMemo } from 'react';
-import { Alert, ScrollView } from 'react-native';
+import { useCallback, useContext, useMemo, useState } from 'react';
+import { Alert, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, XStack, YStack } from 'tamagui';
+import { Compass } from '@tamagui/lucide-icons';
+import { Text, XStack, YStack, Button } from 'tamagui';
 
 import { ThemePreferenceContext } from '@/app/_layout';
 import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
@@ -93,6 +94,7 @@ export default function ExploreScreen() {
   const palette = ThemeColors[themeName];
   const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
   const insets = useSafeAreaInsets();
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const colors = useMemo(() => {
     const accentSpectrum = accentPalette[themeName];
@@ -113,50 +115,71 @@ export default function ExploreScreen() {
     Alert.alert(title, 'This cross-family experience will be available shortly.');
   }, []);
 
+  const scrollPaddingTop = headerHeight || insets.top + BrandSpacing.elementGap;
+
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{
-        paddingTop: insets.top + BrandSpacing.elementGap,
-        paddingBottom: BrandSpacing.stackGap,
-        paddingHorizontal: BrandSpacing.gutter,
-        gap: BrandSpacing.stackGap,
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      <YStack gap="$2">
-        <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={20} color={colors.text} fontWeight="700">
-          Explore Parivar Networks
-        </Text>
-        <Text color={colors.secondary} fontSize={14}>
-          Discover insights and shared spaces across every connected family.
-        </Text>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <YStack
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        backgroundColor={colors.background}
+        zIndex={10}
+        onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
+      >
+        <YStack
+          paddingTop={insets.top + BrandSpacing.elementGap / 2}
+          paddingBottom={BrandSpacing.elementGap / 2}
+          paddingHorizontal={BrandSpacing.gutter}
+          gap="$2"
+        >
+          <XStack ai="center" gap="$3">
+            <Button size="$3" circular variant="outlined" borderColor={colors.accent} icon={Compass} disabled />
+            <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={20} color={colors.text} fontWeight="700">
+              Explore Parivar Networks
+            </Text>
+          </XStack>
+          <Text color={colors.secondary} fontSize={14}>
+            Discover insights and shared spaces across every connected family.
+          </Text>
+        </YStack>
       </YStack>
 
-      <YStack gap="$3">
-        <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
-          Quick Stats
-        </Text>
-        <XStack gap="$3" flexWrap="wrap">
-          {extendedStats.map((card) => (
-            <StatsCard
-              key={card.title}
-              title={card.title}
-              value={card.value}
-              description={card.description}
-              onPress={() => handleStatPress(card.title)}
-              layout="half"
-            />
-          ))}
-        </XStack>
-      </YStack>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingTop: scrollPaddingTop,
+          paddingBottom: BrandSpacing.stackGap,
+          paddingHorizontal: BrandSpacing.gutter,
+          gap: BrandSpacing.stackGap,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <YStack gap="$3">
+          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
+            Quick Stats
+          </Text>
+          <XStack gap="$3" flexWrap="wrap">
+            {extendedStats.map((card) => (
+              <StatsCard
+                key={card.title}
+                title={card.title}
+                value={card.value}
+                description={card.description}
+                onPress={() => handleStatPress(card.title)}
+                layout="half"
+              />
+            ))}
+          </XStack>
+        </YStack>
 
-      <YStack gap="$3">
-        <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
-          Extended Parivar
-        </Text>
-        <XStack gap="$3" flexWrap="wrap">
-          {extendedModules.map((module) => (
+        <YStack gap="$3">
+          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
+            Extended Parivar
+          </Text>
+          <XStack gap="$3" flexWrap="wrap">
+            {extendedModules.map((module) => (
             <ModuleCard
               key={module.title}
               title={module.title}
@@ -165,8 +188,9 @@ export default function ExploreScreen() {
               onPress={() => handleModulePress(module.title)}
             />
           ))}
-        </XStack>
-      </YStack>
-    </ScrollView>
+          </XStack>
+        </YStack>
+      </ScrollView>
+    </View>
   );
 }

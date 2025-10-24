@@ -1,4 +1,4 @@
-import { Edit3, LogOut, Moon, Settings, Sun, UsersRound } from '@tamagui/lucide-icons';
+import { Edit3, LogOut, Moon, Settings, Shield, Sun, UsersRound } from '@tamagui/lucide-icons';
 import { doc, getDoc } from 'firebase/firestore';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { ScrollView } from 'react-native';
@@ -9,11 +9,13 @@ import { firebaseAuth, firebaseDb } from '@/config/firebase';
 import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography } from '@/design-system';
 import { withAlpha } from '@/utils/color';
+import { usePermissions } from '@/hooks/use-permissions';
 
 export default function AvatarScreen() {
   const { themeName, setThemeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
   const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
+  const permissions = usePermissions();
 
   const [profileName, setProfileName] = useState<string>('');
 
@@ -147,6 +149,22 @@ export default function AvatarScreen() {
 
       <Card padding="$3" backgroundColor={colors.card} bordered borderColor={colors.border}>
         <YStack gap="$2">
+          <ListItem
+            borderRadius="$6"
+            icon={Shield}
+            backgroundColor={colors.surface}
+            borderWidth={1}
+            borderColor={colors.border}
+            onPress={() => void permissions.requestPermissions()}
+            pressTheme
+          >
+            <ListItem.Text numberOfLines={1} color={colors.text}>
+              Permissions & Access
+            </ListItem.Text>
+            <ListItem.SubText numberOfLines={1} color={colors.secondary}>
+              Camera {permissions.status.camera}, Mic {permissions.status.microphone}, Location {permissions.status.location}, Internet {permissions.status.internet}
+            </ListItem.SubText>
+          </ListItem>
           <ListItem
             borderRadius="$6"
             icon={Settings}

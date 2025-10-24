@@ -1,10 +1,13 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Smile, Send, MessageCircle } from '@tamagui/lucide-icons';
 import { Button, Input, Text, XStack, YStack } from 'tamagui';
 
 import { ThemePreferenceContext } from '@/app/_layout';
-import { ThemeColors, darkPalette, lightPalette } from '@/constants/tamagui-theme';
+import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography } from '@/design-system';
+import { withAlpha } from '@/utils/color';
 
 type ChatMessage = {
   id: string;
@@ -46,9 +49,12 @@ export default function ConnectScreen() {
   const { themeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
   const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
+  const accentSpectrum = accentPalette[themeName];
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [draft, setDraft] = useState('');
   const scrollRef = useRef<ScrollView>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const colors = useMemo(
     () => ({
@@ -57,13 +63,13 @@ export default function ConnectScreen() {
       border: basePalette[themeName === 'dark' ? 6 : 7],
       text: palette.text,
       secondary: basePalette[themeName === 'dark' ? 9 : 6],
-      bubbleOwn: palette.tint,
-      bubbleOwnText: palette.accentForeground,
+      bubbleOwn: withAlpha(accentSpectrum[themeName === 'dark' ? 8 : 4], themeName === 'dark' ? 0.34 : 0.22),
+      bubbleOwnText: themeName === 'dark' ? palette.accentForeground : basePalette[10],
       bubbleOther: basePalette[themeName === 'dark' ? 5 : 0],
       bubbleOtherBorder: basePalette[themeName === 'dark' ? 7 : 2],
       timestamp: basePalette[themeName === 'dark' ? 8 : 5],
     }),
-    [basePalette, palette, themeName]
+    [accentSpectrum, basePalette, palette, themeName]
   );
 
   useEffect(() => {
@@ -87,36 +93,56 @@ export default function ConnectScreen() {
     setDraft('');
   };
 
+  const scrollPaddingTop = headerHeight || insets.top + BrandSpacing.elementGap;
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <YStack
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        backgroundColor={colors.background}
+        zIndex={10}
+        onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
+      >
+        <YStack
+          paddingTop={insets.top + BrandSpacing.elementGap / 2}
+          paddingBottom={BrandSpacing.elementGap / 2}
+          paddingHorizontal={BrandSpacing.gutter}
+          gap="$2"
+        >
+          <XStack ai="center" gap="$3">
+            <Button size="$3" circular variant="outlined" borderColor={colors.border} icon={MessageCircle} disabled />
+            <Text
+              fontFamily={BrandTypography.tagline.fontFamily}
+              fontSize={22}
+              fontWeight="700"
+              color={colors.text}
+            >
+              Parivar Commons Chat
+            </Text>
+          </XStack>
+          <Text color={colors.secondary} fontSize={14}>
+            A global lounge for every connected family. Share updates, plans, and love with the whole parivar.
+          </Text>
+        </YStack>
+      </YStack>
+
       <ScrollView
         ref={scrollRef}
         style={{ flex: 1 }}
         contentContainerStyle={{
           paddingHorizontal: BrandSpacing.gutter,
-          paddingTop: BrandSpacing.stackGap,
+          paddingTop: scrollPaddingTop,
           paddingBottom: BrandSpacing.elementGap,
           gap: BrandSpacing.elementGap,
         }}
         showsVerticalScrollIndicator={false}
       >
-        <YStack gap="$3">
-          <Text
-            fontFamily={BrandTypography.tagline.fontFamily}
-            fontSize={22}
-            fontWeight="700"
-            color={colors.text}
-          >
-            Parivar Commons Chat
-          </Text>
-          <Text color={colors.secondary} fontSize={14}>
-            A global lounge for every connected family. Share updates, plans, and love with the whole parivar.
-          </Text>
-        </YStack>
-
         <YStack gap="$3">
           {messages.map((message) => {
             const alignment = message.isOwn ? 'flex-end' : 'flex-start';
@@ -160,6 +186,13 @@ export default function ConnectScreen() {
         borderTopColor={colors.border}
       >
         <XStack gap="$3" ai="center">
+          <Button
+            size="$4"
+            variant="outlined"
+            borderColor={colors.border}
+            onPress={() => Alert.alert('Emojis', 'Emoji picker coming soon!')}
+            icon={Smile}
+          />
           <Input
             flex={1}
             value={draft}
@@ -171,9 +204,13 @@ export default function ConnectScreen() {
             color={colors.text}
             placeholderTextColor={colors.secondary}
           />
-          <Button size="$4" onPress={handleSend} disabled={!draft.trim()}>
-            Send
-          </Button>
+          <Button
+            size="$4"
+            onPress={handleSend}
+            disabled={!draft.trim()}
+            backgroundColor={colors.bubbleOwn}
+            icon={Send}
+          />
         </XStack>
       </YStack>
     </KeyboardAvoidingView>
