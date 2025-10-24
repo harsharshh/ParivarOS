@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
-import { Card, Text, YStack } from 'tamagui';
+import { Card, Text, YStack, useThemeName } from 'tamagui';
 
 import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { withAlpha } from '@/utils/color';
 
 export type StatsCardProps = {
@@ -14,21 +13,23 @@ export type StatsCardProps = {
 };
 
 export function StatsCard({ title, value, description, onPress, layout = 'half' }: StatsCardProps) {
-  const colorScheme = useColorScheme() ?? 'light';
+  const themeName = useThemeName();
+  const colorScheme: 'light' | 'dark' = themeName?.toString().startsWith('dark') ? 'dark' : 'light';
   const palette = ThemeColors[colorScheme];
   const accentSpectrum = accentPalette[colorScheme];
+  const isDark = colorScheme === 'dark';
 
   const colors = useMemo(
     () => ({
-      background: withAlpha(accentSpectrum[colorScheme === 'dark' ? 4 : 1], colorScheme === 'dark' ? 0.22 : 0.12),
-      border: withAlpha(accentSpectrum[colorScheme === 'dark' ? 6 : 3], 0.28),
-      hoverBorder: accentSpectrum[colorScheme === 'dark' ? 8 : 4],
-      primary: accentSpectrum[colorScheme === 'dark' ? 10 : 4],
-      secondary: withAlpha(palette.text, colorScheme === 'dark' ? 0.64 : 0.58),
-      label: palette.icon,
-      shadow: withAlpha(accentSpectrum[colorScheme === 'dark' ? 8 : 5], 0.18),
+      background: isDark ? withAlpha(accentSpectrum[4], 0.26) : withAlpha(accentSpectrum[1], 0.12),
+      border: isDark ? withAlpha(accentSpectrum[6], 0.52) : withAlpha(accentSpectrum[3], 0.32),
+      hoverBorder: isDark ? accentSpectrum[9] : accentSpectrum[4],
+      primary: isDark ? accentSpectrum[8] : accentSpectrum[4],
+      secondary: isDark ? withAlpha(accentSpectrum[10], 0.9) : withAlpha(palette.text, 0.6),
+      label: isDark ? accentSpectrum[11] : withAlpha(palette.text, 0.72),
+      shadow: withAlpha(accentSpectrum[isDark ? 7 : 5], 0.22),
     }),
-    [accentSpectrum, colorScheme, palette.icon, palette.text]
+    [accentSpectrum, isDark, palette.accentForeground, palette.text, palette.tint]
   );
 
   const width = layout === 'half' ? '48%' : '100%';

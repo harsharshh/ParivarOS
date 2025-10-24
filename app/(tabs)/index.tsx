@@ -4,12 +4,13 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, Card, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui';
+import { useRouter } from 'expo-router';
 
 import { ThemePreferenceContext } from '@/app/_layout';
 import { FamilyCardIllustration } from '@/assets/images/family-card-illustration';
 import { firebaseAuth, firebaseDb } from '@/config/firebase';
 import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
-import { BrandSpacing, BrandTypography, StatsCard, ModuleCard } from '@/design-system';
+import { BrandSpacing, BrandTypography, ModuleCard, StatsCard } from '@/design-system';
 import { withAlpha } from '@/utils/color';
 
 const summaryCardDefinitions = [
@@ -61,9 +62,9 @@ const familyModules = [
     description: 'Emotional check-ins and wellbeing insights.',
   },
   {
-    title: 'Aarogya Bandhan',
+    title: 'AarogyaBandhan',
     subtitle: 'आरोग्य बन्धन',
-    description: 'Health tracker with medicine reminders and vitals.',
+    description: 'Health tracker and reminders',
   },
   {
     title: 'SevaBank',
@@ -108,7 +109,7 @@ const familyModules = [
   {
     title: 'MandirOS',
     subtitle: 'मंदिर ओएस',
-    description: 'Aarti, panchang, bhajans, and devotional reminders.',
+    description: 'Aarti,panchang,bhajan and devotional reminders.',
   },
   {
     title: 'Chhoti Duniya',
@@ -156,6 +157,7 @@ const bondingQuotes = [
 ];
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { themeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
   const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
@@ -282,7 +284,25 @@ export default function HomeScreen() {
               </YStack>
             </XStack>
 
-            <Button size="$3" circular variant="outlined" icon={Bell} />
+            <XStack gap="$2">
+              <Button
+                size="$3"
+                circular
+                backgroundColor={colors.accent}
+                onPress={() => Alert.alert('SOS', 'Family assistance is on the way.')}
+              >
+                <Text color="#fff" fontWeight="700">
+                  SOS
+                </Text>
+              </Button>
+              <Button
+                size="$3"
+                circular
+                variant="outlined"
+                icon={Bell}
+                onPress={() => router.push('/notifications')}
+              />
+            </XStack>
           </XStack>
         </YStack>
       </YStack>

@@ -1,8 +1,8 @@
+import { ChevronRight } from '@tamagui/lucide-icons';
 import { useMemo } from 'react';
-import { Card, Text, YStack } from 'tamagui';
+import { Card, Text, YStack, useThemeName } from 'tamagui';
 
 import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { withAlpha } from '@/utils/color';
 
 export type ModuleCardProps = {
@@ -14,21 +14,23 @@ export type ModuleCardProps = {
 };
 
 export function ModuleCard({ title, subtitle, description, onPress, layout = 'half' }: ModuleCardProps) {
-  const colorScheme = useColorScheme() ?? 'light';
+  const themeName = useThemeName();
+  const colorScheme: 'light' | 'dark' = themeName?.toString().startsWith('dark') ? 'dark' : 'light';
   const palette = ThemeColors[colorScheme];
   const accentSpectrum = accentPalette[colorScheme];
+  const isDark = colorScheme === 'dark';
 
   const colors = useMemo(
     () => ({
-      background: withAlpha(accentSpectrum[colorScheme === 'dark' ? 5 : 1], colorScheme === 'dark' ? 0.26 : 0.12),
-      border: withAlpha(accentSpectrum[colorScheme === 'dark' ? 7 : 3], 0.32),
-      hoverBorder: accentSpectrum[colorScheme === 'dark' ? 9 : 4],
-      title: accentSpectrum[colorScheme === 'dark' ? 10 : 4],
-      subtitle: withAlpha(palette.text, 0.8),
-      description: withAlpha(palette.text, colorScheme === 'dark' ? 0.64 : 0.68),
-      shadow: withAlpha(accentSpectrum[colorScheme === 'dark' ? 8 : 5], 0.16),
+      background: isDark ? withAlpha(accentSpectrum[4], 0.3) : withAlpha(accentSpectrum[1], 0.12),
+      border: isDark ? withAlpha(accentSpectrum[6], 0.55) : withAlpha(accentSpectrum[3], 0.32),
+      hoverBorder: accentSpectrum[isDark ? 9 : 4],
+      title: isDark ? accentSpectrum[8] : accentSpectrum[4],
+      subtitle: isDark ? withAlpha(accentSpectrum[10], 0.95) : withAlpha(palette.text, 0.85),
+      description: isDark ? withAlpha(accentSpectrum[10], 0.82) : withAlpha(palette.text, 0.68),
+      shadow: withAlpha(accentSpectrum[isDark ? 7 : 5], 0.18),
     }),
-    [accentSpectrum, colorScheme, palette.text]
+    [accentSpectrum, isDark, palette.accentForeground, palette.text, palette.tint]
   );
 
   const width = layout === 'half' ? '48%' : '100%';
@@ -51,16 +53,21 @@ export function ModuleCard({ title, subtitle, description, onPress, layout = 'ha
       onPress={onPress}
       disabled={!onPress}
     >
-      <YStack gap="$2">
-        <Text color={colors.title} fontSize={16} fontWeight="600">
-          {title}
-        </Text>
-        <Text color={colors.subtitle} fontSize={14}>
-          {subtitle}
-        </Text>
-        <Text color={colors.description} fontSize={12} lineHeight={16}>
-          {description}
-        </Text>
+      <YStack gap="$3" flex={1} position="relative">
+        <YStack gap="$2">
+          <Text color={colors.title} fontSize={16} fontWeight="600">
+            {title}
+          </Text>
+          <Text color={colors.subtitle} fontSize={14}>
+            {subtitle}
+          </Text>
+          <Text color={colors.description} fontSize={12} lineHeight={16}>
+            {description}
+          </Text>
+        </YStack>
+        <YStack position="absolute" bottom="$0" right="$0" pointerEvents="none">
+          <ChevronRight size={18} color={colors.title} />
+        </YStack>
       </YStack>
     </Card>
   );
