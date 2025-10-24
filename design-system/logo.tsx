@@ -1,18 +1,18 @@
 import { memo, useId } from 'react';
 import { StyleProp, ViewStyle } from 'react-native';
 import Svg, {
+  Circle,
   Defs,
   LinearGradient,
+  Path,
   Rect,
   Stop,
-  Path,
-  Circle,
   Text as SvgText,
 } from 'react-native-svg';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { BrandColors, BrandTypography } from './tokens';
 import { withAlpha } from '@/utils/color';
+import { BrandColors, BrandTypography } from './tokens';
 
 type LogoProps = {
   size?: number;

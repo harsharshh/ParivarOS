@@ -1,8 +1,9 @@
 import { Bell } from '@tamagui/lucide-icons';
 import { doc, getDoc } from 'firebase/firestore';
-import { useContext, useEffect, useMemo, useState } from 'react';
-import { ScrollView } from 'react-native';
-import { Avatar, Button, Card, Paragraph, Text, XStack, YStack } from 'tamagui';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { RefreshControl, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Avatar, Button, Card, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ThemePreferenceContext } from '@/app/_layout';
 import { FamilyCardIllustration } from '@/assets/images/family-card-illustration';
@@ -22,8 +23,11 @@ export default function HomeScreen() {
   const { themeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
   const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
+  const insets = useSafeAreaInsets();
 
   const [profileName, setProfileName] = useState<string>('Parivar Friend');
+  const [refreshing, setRefreshing] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const colors = useMemo(() => {
     const accentSpectrum = accentPalette[themeName];
@@ -40,29 +44,38 @@ export default function HomeScreen() {
     };
   }, [basePalette, palette, themeName]);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!firebaseAuth?.currentUser || !firebaseDb) return;
-      try {
-        const snapshot = await getDoc(doc(firebaseDb, 'users', firebaseAuth.currentUser.uid));
-        const data = snapshot.exists() ? (snapshot.data() as Record<string, unknown>) : {};
-        const resolvedName =
-          (data?.name as string | undefined)?.trim() ||
-          firebaseAuth.currentUser.displayName ||
-          firebaseAuth.currentUser.email?.split('@')[0] ||
-          'Parivar Friend';
-        setProfileName(resolvedName);
-      } catch {
-        const fallback =
-          firebaseAuth.currentUser?.displayName ||
-          firebaseAuth.currentUser?.email?.split('@')[0] ||
-          'Parivar Friend';
-        setProfileName(fallback);
-      }
-    };
-
-    void fetchProfile();
+  const fetchProfile = useCallback(async () => {
+    if (!firebaseAuth?.currentUser || !firebaseDb) return;
+    try {
+      const snapshot = await getDoc(doc(firebaseDb, 'users', firebaseAuth.currentUser.uid));
+      const data = snapshot.exists() ? (snapshot.data() as Record<string, unknown>) : {};
+      const resolvedName =
+        (data?.name as string | undefined)?.trim() ||
+        firebaseAuth.currentUser.displayName ||
+        firebaseAuth.currentUser.email?.split('@')[0] ||
+        'Parivar Friend';
+      setProfileName(resolvedName);
+    } catch {
+      const fallback =
+        firebaseAuth.currentUser?.displayName ||
+        firebaseAuth.currentUser?.email?.split('@')[0] ||
+        'Parivar Friend';
+      setProfileName(fallback);
+    }
   }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchProfile();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    void fetchProfile();
+  }, [fetchProfile]);
 
   const firstName = useMemo(() => {
     if (!profileName) return 'Parivar Friend';
@@ -70,38 +83,85 @@ export default function HomeScreen() {
     return first || profileName;
   }, [profileName]);
 
+  const headerPaddingTop = Math.max(insets.top, BrandSpacing.elementGap);
+  const scrollPaddingTop = headerHeight > 0 ? headerHeight : headerPaddingTop + BrandSpacing.elementGap;
+
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{
-        paddingHorizontal: BrandSpacing.gutter,
-        paddingTop: BrandSpacing.stackGap,
-        paddingBottom: BrandSpacing.stackGap,
-        gap: BrandSpacing.stackGap,
-      }}
-    >
-      <XStack ai="center" jc="space-between" mt="$4">
-        <XStack ai="center" gap="$3">
-          <Avatar size="$4" circular bg={colors.accentSoft} ai="center" jc="center">
-            <Avatar.Image src={firebaseAuth?.currentUser?.photoURL ?? undefined} />
-            <Avatar.Fallback ai="center" jc="center">
-              <Text color={colors.avatarText} fontWeight="700" textAlign="center">
-                {firstName.charAt(0).toUpperCase()}
-              </Text>
-            </Avatar.Fallback>
-          </Avatar>
-          <YStack>
-            <Text fontSize={12} color={colors.secondary}>Namaste,</Text>
-            <Text fontSize={16} fontFamily={BrandTypography.tagline.fontFamily} color={colors.text}>
-              {firstName}
-            </Text>
-          </YStack>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <YStack
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        backgroundColor={colors.background}
+        zIndex={10}
+        onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
+      >
+        <YStack
+          paddingTop={headerPaddingTop}
+          paddingBottom={BrandSpacing.elementGap / 2}
+          paddingHorizontal={BrandSpacing.gutter}
+          gap="$3"
+        >
+          <XStack ai="center" jc="space-between">
+            <XStack ai="center" gap="$3">
+              <Avatar size="$4" circular bg={colors.accentSoft} ai="center" jc="center">
+                <Avatar.Image src={firebaseAuth?.currentUser?.photoURL ?? undefined} />
+                <Avatar.Fallback ai="center" jc="center">
+                  <Text color={colors.avatarText} fontWeight="700" textAlign="center">
+                    {firstName.charAt(0).toUpperCase()}
+                  </Text>
+                </Avatar.Fallback>
+              </Avatar>
+              <YStack>
+                <Text fontSize={12} color={colors.secondary}>Namaste,</Text>
+                <Text fontSize={16} fontFamily={BrandTypography.tagline.fontFamily} color={colors.text}>
+                  {firstName}
+                </Text>
+              </YStack>
+            </XStack>
+
+            <Button size="$3" circular variant="outlined" icon={Bell} />
+          </XStack>
+        </YStack>
+      </YStack>
+
+      {refreshing && (
+        <XStack
+          position="absolute"
+          top={headerHeight}
+          left={0}
+          right={0}
+          zIndex={5}
+          paddingHorizontal={BrandSpacing.gutter}
+          paddingVertical={20}
+          pointerEvents="none"
+          backgroundColor="transparent"
+          ai="center"
+          jc="center"
+        >
+          <Spinner size="large" color={colors.accent} />
         </XStack>
+      )}
 
-        <Button size="$3" circular variant="outlined" icon={Bell} />
-      </XStack>
-
-      <Card padding="$5" bordered borderColor={colors.border} backgroundColor={colors.card} gap="$4" shadowColor={colors.shadow} shadowRadius={20}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingHorizontal: BrandSpacing.gutter,
+          paddingTop: scrollPaddingTop,
+          paddingBottom: BrandSpacing.stackGap,
+          gap: BrandSpacing.stackGap,
+        }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
+          />
+        }
+      >
+        <Card padding="$5" bordered borderColor={colors.border} backgroundColor={colors.card} gap="$4" shadowColor={colors.shadow} shadowRadius={20}>
         <YStack ai="center" gap="$3">
           <FamilyCardIllustration width={220} height={140} theme={themeName} accentStart={palette.tint} accentEnd={palette.accent} />
           <Text fontSize={18} fontFamily={BrandTypography.tagline.fontFamily} color={colors.text} textAlign="center">
@@ -161,7 +221,8 @@ export default function HomeScreen() {
           ))}
         </XStack>
       </YStack>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
