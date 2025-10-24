@@ -1,16 +1,23 @@
 import { createContext, useContext } from 'react';
 
-import type { useInitialPermissions } from './use-initial-permissions';
+export type PermissionSummary = {
+  camera: 'granted' | 'denied' | 'undetermined';
+  microphone: 'granted' | 'denied' | 'undetermined';
+  location: 'granted' | 'denied' | 'undetermined';
+  internet: 'granted' | 'denied' | 'undetermined';
+};
 
-type InitialPermissionsReturn = ReturnType<typeof useInitialPermissions> | null;
+export type PermissionsContextValue = {
+  status: PermissionSummary;
+  requestPermissions: () => Promise<void>;
+};
 
-export const PermissionsContext = createContext<InitialPermissionsReturn>(null);
+export const PermissionsContext = createContext<PermissionsContextValue | null>(null);
 
-export function usePermissions() {
+export function usePermissions(): PermissionsContextValue {
   const ctx = useContext(PermissionsContext);
   if (!ctx) {
     throw new Error('usePermissions must be used within a PermissionsContext provider');
   }
   return ctx;
 }
-

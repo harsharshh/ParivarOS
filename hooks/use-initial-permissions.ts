@@ -5,14 +5,11 @@ import { Camera } from 'expo-camera';
 import { Audio } from 'expo-av';
 import * as Location from 'expo-location';
 
-type PermissionState = 'granted' | 'denied' | 'undetermined';
+import type { PermissionSummary, PermissionsContextValue } from './use-permissions';
 
-type StoredPermissions = {
-  camera: PermissionState;
-  microphone: PermissionState;
-  location: PermissionState;
-  internet: PermissionState;
-};
+type PermissionState = PermissionSummary['camera'];
+
+type StoredPermissions = PermissionSummary;
 
 const STORAGE_KEY = 'parivaros.permissions.state';
 
@@ -25,7 +22,7 @@ function allGranted(state: StoredPermissions) {
   );
 }
 
-export function useInitialPermissions() {
+export function useInitialPermissions(): PermissionsContextValue {
   const [status, setStatus] = useState<StoredPermissions | null>(null);
   const hasRequestedRef = useRef(false);
 

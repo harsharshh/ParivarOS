@@ -158,12 +158,14 @@ export default function AvatarScreen() {
             onPress={() => void permissions.requestPermissions()}
             pressTheme
           >
-            <ListItem.Text numberOfLines={1} color={colors.text}>
-              Permissions & Access
-            </ListItem.Text>
-            <ListItem.SubText numberOfLines={1} color={colors.secondary}>
-              Camera {permissions.status.camera}, Mic {permissions.status.microphone}, Location {permissions.status.location}, Internet {permissions.status.internet}
-            </ListItem.SubText>
+            <YStack gap="$1">
+              <ListItem.Text numberOfLines={1} color={colors.text}>
+                Permissions & Access
+              </ListItem.Text>
+              <Text color={colors.secondary} fontSize={12}>
+                Camera {permissions.status.camera}, Mic {permissions.status.microphone}, Location {permissions.status.location}, Internet {permissions.status.internet}
+              </Text>
+            </YStack>
           </ListItem>
           <ListItem
             borderRadius="$6"
