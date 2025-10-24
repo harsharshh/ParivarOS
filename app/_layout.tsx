@@ -1,4 +1,5 @@
 import { PortalProvider as GorhomPortalProvider } from '@gorhom/portal';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -138,11 +139,12 @@ export default function RootLayout() {
   return (
     <ThemePreferenceContext.Provider value={preferenceValue}>
       <PermissionsContext.Provider value={permissions}>
-        <TamaguiProvider config={tamaguiConfig} defaultTheme={themeName}>
-          <GorhomPortalProvider>
-            <TamaguiPortalProvider>
-              <ThemeProvider value={themeName === 'dark' ? DarkTheme : DefaultTheme}>
-                <Theme  name={themeName}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <TamaguiProvider config={tamaguiConfig} defaultTheme={themeName}>
+            <GorhomPortalProvider>
+              <TamaguiPortalProvider>
+                <ThemeProvider value={themeName === 'dark' ? DarkTheme : DefaultTheme}>
+                  <Theme  name={themeName}>
                 <Stack initialRouteName={initialRoute}>
                   <Stack.Screen name="index" options={{ headerShown: false }} />
                   <Stack.Screen name="intro/index" options={{ headerShown: false }} />
@@ -159,12 +161,13 @@ export default function RootLayout() {
                   />
                   <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
                 </Stack>
-                  <StatusBar style="auto" />
-                </Theme>
-              </ThemeProvider>
-            </TamaguiPortalProvider>
-          </GorhomPortalProvider>
-        </TamaguiProvider>
+                    <StatusBar style="auto" />
+                  </Theme>
+                </ThemeProvider>
+              </TamaguiPortalProvider>
+            </GorhomPortalProvider>
+          </TamaguiProvider>
+        </GestureHandlerRootView>
       </PermissionsContext.Provider>
     </ThemePreferenceContext.Provider>
   );

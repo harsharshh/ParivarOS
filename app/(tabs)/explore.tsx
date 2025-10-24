@@ -1,13 +1,13 @@
-import { useCallback, useContext, useMemo, useState } from 'react';
-import { Alert, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Compass } from '@tamagui/lucide-icons';
-import { Text, XStack, YStack, Button } from 'tamagui';
+import { useCallback, useContext, useMemo, useState } from 'react';
+import { Alert, RefreshControl, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ThemePreferenceContext } from '@/app/_layout';
-import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
-import { BrandSpacing, BrandTypography, ModuleCard, StatsCard } from '@/design-system';
-import { withAlpha } from '@/utils/color';
+import { ThemeColors, darkPalette, lightPalette } from '@/constants/tamagui-theme';
+import { BrandSpacing, BrandTypography, ModuleCard, ParivarCtaCard, StatsCard } from '@/design-system';
+import { useParivarStatus } from '@/hooks/use-parivar-status';
 
 const extendedStats = [
   { title: 'Connected Parivar', value: '6', description: 'Linked across the parivar' },
@@ -95,27 +95,57 @@ export default function ExploreScreen() {
   const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
   const insets = useSafeAreaInsets();
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const { hasJoinedParivar, refreshStatus } = useParivarStatus();
 
-  const colors = useMemo(() => {
-    const accentSpectrum = accentPalette[themeName];
-    return {
+  const colors = useMemo(
+    () => ({
       background: palette.background,
       text: palette.text,
       accent: palette.tint,
       secondary: basePalette[themeName === 'dark' ? 9 : 6],
-      sectionBackground: withAlpha(accentSpectrum[themeName === 'dark' ? 3 : 1], themeName === 'dark' ? 0.22 : 0.12),
-    };
-  }, [basePalette, palette, themeName]);
+    }),
+    [basePalette, palette, themeName]
+  );
 
-  const handleStatPress = useCallback((title: string) => {
-    Alert.alert(title, 'Detailed analytics are coming soon for extended families.');
+  const ensureJoined = useCallback(() => {
+    Alert.alert('Join a Parivar', 'Connect to a Parivar to explore extended family spaces.');
   }, []);
 
+  const handleStatPress = useCallback((title: string) => {
+    if (!hasJoinedParivar) {
+      ensureJoined();
+      return;
+    }
+    Alert.alert(title, 'Detailed analytics are coming soon for extended families.');
+  }, [ensureJoined, hasJoinedParivar]);
+
   const handleModulePress = useCallback((title: string) => {
+    if (!hasJoinedParivar) {
+      ensureJoined();
+      return;
+    }
     Alert.alert(title, 'This cross-family experience will be available shortly.');
+  }, [ensureJoined, hasJoinedParivar]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        refreshStatus(),
+        new Promise((resolve) => setTimeout(resolve, 500)),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshStatus]);
+
+  const handleJoinParivar = useCallback(() => {
+    Alert.alert('Join Parivar', 'Joining flow coming soon.');
   }, []);
 
   const scrollPaddingTop = headerHeight || insets.top + BrandSpacing.elementGap;
+  const requiresJoin = !hasJoinedParivar;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -146,6 +176,24 @@ export default function ExploreScreen() {
         </YStack>
       </YStack>
 
+      {refreshing && (
+        <XStack
+          position="absolute"
+          top={headerHeight}
+          left={0}
+          right={0}
+          zIndex={5}
+          paddingHorizontal={BrandSpacing.gutter}
+          paddingVertical={20}
+          pointerEvents="none"
+          backgroundColor="transparent"
+          ai="center"
+          jc="center"
+        >
+          <Spinner size="large" color={colors.accent} />
+        </XStack>
+      )}
+
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
@@ -155,7 +203,29 @@ export default function ExploreScreen() {
           gap: BrandSpacing.stackGap,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
+          />
+        }
       >
+        {requiresJoin && (
+          <ParivarCtaCard
+            themeName={themeName}
+            title="Join your extended Parivar."
+            description="Link with your loved ones to see cross-family stats, celebrations, and shared stories."
+            buttonLabel="Join Parivar"
+            onPress={handleJoinParivar}
+            backgroundColor={colors.card}
+            borderColor={colors.border}
+            shadowColor={colors.accent}
+            descriptionColor={colors.secondary}
+          />
+        )}
+
         <YStack gap="$3">
           <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
             Quick Stats

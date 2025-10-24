@@ -1,17 +1,16 @@
 import { Bell } from '@tamagui/lucide-icons';
-import { doc, getDoc } from 'firebase/firestore';
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, Button, Card, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Avatar, Button, Card, Spinner, Text, XStack, YStack } from 'tamagui';
 import { useRouter } from 'expo-router';
 
 import { ThemePreferenceContext } from '@/app/_layout';
-import { FamilyCardIllustration } from '@/assets/images/family-card-illustration';
-import { firebaseAuth, firebaseDb } from '@/config/firebase';
+import { firebaseAuth } from '@/config/firebase';
 import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
-import { BrandSpacing, BrandTypography, ModuleCard, StatsCard } from '@/design-system';
+import { BrandSpacing, BrandTypography, ModuleCard, ParivarCtaCard, StatsCard } from '@/design-system';
 import { withAlpha } from '@/utils/color';
+import { useParivarStatus } from '@/hooks/use-parivar-status';
 
 const summaryCardDefinitions = [
   { title: 'Parivar Members', value: '12', description: 'Loved ones connected' },
@@ -163,16 +162,39 @@ export default function HomeScreen() {
   const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
   const insets = useSafeAreaInsets();
 
-  const [profileName, setProfileName] = useState<string>('Parivar Friend');
   const [refreshing, setRefreshing] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
+  const { profileName, hasCreatedParivar, hasJoinedParivar, refreshStatus } = useParivarStatus();
 
-  const handleSummaryPress = useCallback((title: string) => {
-    Alert.alert(title, 'Detailed insights are coming soon.');
+  const ensureParivarCreated = useCallback(() => {
+    Alert.alert(
+      'Create your Parivar',
+      'Create or join your Parivar to unlock these experiences.'
+    );
   }, []);
 
+  const handleSummaryPress = useCallback((title: string) => {
+    if (!hasJoinedParivar) {
+      ensureParivarCreated();
+      return;
+    }
+    Alert.alert(title, 'Detailed insights are coming soon.');
+  }, [ensureParivarCreated, hasJoinedParivar]);
+
   const handleModulePress = useCallback((title: string) => {
+    if (!hasJoinedParivar) {
+      ensureParivarCreated();
+      return;
+    }
     Alert.alert(title, 'This module is coming soon.');
+  }, [ensureParivarCreated, hasJoinedParivar]);
+
+  const handleCreateParivar = useCallback(() => {
+    Alert.alert('Create Parivar', 'Launching Parivar creation flow soon.');
+  }, []);
+
+  const handleJoinParivar = useCallback(() => {
+    Alert.alert('Join Parivar', 'Joining flow coming soon.');
   }, []);
 
   const colors = useMemo(() => {
@@ -195,38 +217,14 @@ export default function HomeScreen() {
     };
   }, [basePalette, palette, themeName]);
 
-  const fetchProfile = useCallback(async () => {
-    if (!firebaseAuth?.currentUser || !firebaseDb) return;
-    try {
-      const snapshot = await getDoc(doc(firebaseDb, 'users', firebaseAuth.currentUser.uid));
-      const data = snapshot.exists() ? (snapshot.data() as Record<string, unknown>) : {};
-      const resolvedName =
-        (data?.name as string | undefined)?.trim() ||
-        firebaseAuth.currentUser.displayName ||
-        firebaseAuth.currentUser.email?.split('@')[0] ||
-        'Parivar Friend';
-      setProfileName(resolvedName);
-    } catch {
-      const fallback =
-        firebaseAuth.currentUser?.displayName ||
-        firebaseAuth.currentUser?.email?.split('@')[0] ||
-        'Parivar Friend';
-      setProfileName(fallback);
-    }
-  }, []);
-
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await fetchProfile();
+      await refreshStatus();
     } finally {
       setRefreshing(false);
     }
-  }, [fetchProfile]);
-
-  useEffect(() => {
-    void fetchProfile();
-  }, [fetchProfile]);
+  }, [refreshStatus]);
 
   const firstName = useMemo(() => {
     if (!profileName) return 'Parivar Friend';
@@ -248,6 +246,8 @@ export default function HomeScreen() {
       })),
     [handleSummaryPress]
   );
+  const showCreateCTA = !hasCreatedParivar && !hasJoinedParivar;
+  const showJoinCTA = hasCreatedParivar && !hasJoinedParivar;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -343,25 +343,33 @@ export default function HomeScreen() {
           />
         }
       >
-        <Card padding="$5" bordered borderColor={colors.border} backgroundColor={colors.card} gap="$4" shadowColor={colors.shadow} shadowRadius={20}>
-        <YStack ai="center" gap="$3">
-          <FamilyCardIllustration width={220} height={140} theme={themeName} accentStart={palette.tint} accentEnd={palette.accent} />
-          <Text fontSize={18} fontFamily={BrandTypography.tagline.fontFamily} color={colors.text} textAlign="center">
-            You haven&apos;t joined a Parivar yet.
-          </Text>
-          <Paragraph textAlign="center" color={colors.secondary} fontSize={14}>
-            Join or create a parivar to share updates, celebrate milestones, and stay close to your people.
-          </Paragraph>
-        </YStack>
-        <XStack gap="$3" flexWrap="wrap">
-          <Button flex={1} size="$3" theme="accent">
-            Join Parivar
-          </Button>
-          <Button flex={1} size="$3" variant="outlined" borderColor={colors.accent}>
-            Create Parivar
-          </Button>
-        </XStack>
-      </Card>
+        {showCreateCTA && (
+          <ParivarCtaCard
+            themeName={themeName}
+            title="You haven't created a Parivar yet."
+            description="Start by creating your Parivar to add members, stories, and rituals in one joyful place."
+            buttonLabel="Create Parivar"
+            onPress={handleCreateParivar}
+            backgroundColor={colors.card}
+            borderColor={colors.border}
+            shadowColor={colors.shadow}
+            descriptionColor={colors.secondary}
+          />
+        )}
+
+        {showJoinCTA && (
+          <ParivarCtaCard
+            themeName={themeName}
+            title="Join your Parivar to continue."
+            description="You’ve created a Parivar workspace. Join it to collaborate with your loved ones."
+            buttonLabel="Join Parivar"
+            onPress={handleJoinParivar}
+            backgroundColor={colors.card}
+            borderColor={colors.border}
+            shadowColor={colors.shadow}
+            descriptionColor={colors.secondary}
+          />
+        )}
 
         <Card
           padding="$4"
