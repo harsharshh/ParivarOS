@@ -207,7 +207,8 @@ export default function HomeScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
-  const { profileName, hasCreatedParivar, hasJoinedParivar, refreshStatus } = useParivarStatus();
+  const { profileName, hasCreatedParivar, hasJoinedParivar, refreshStatus, latestFamilyDraft } =
+    useParivarStatus();
   const [hasCreateParivarProgress, setHasCreateParivarProgress] = useState(false);
 
   const ensureParivarCreated = useCallback(() => {
@@ -281,15 +282,18 @@ export default function HomeScreen() {
     useCallback(() => {
       let isActive = true;
       (async () => {
+        if (isActive && latestFamilyDraft) {
+          setHasCreateParivarProgress(true);
+        }
         const progress = await getCreateParivarProgress();
         if (isActive) {
-          setHasCreateParivarProgress(Boolean(progress));
+          setHasCreateParivarProgress(Boolean(progress) || Boolean(latestFamilyDraft));
         }
       })();
       return () => {
         isActive = false;
       };
-    }, [])
+    }, [latestFamilyDraft])
   );
 
   const firstName = useMemo(() => {

@@ -29,6 +29,7 @@ import { FamilyTreeIllustration } from '@/design-system/illustrations';
 import { withAlpha } from '@/utils/color';
 import {
   CreateParivarMemberDraft,
+  CreateParivarProgress,
   CreateParivarStep,
   clearCreateParivarProgress,
   getCreateParivarProgress,
@@ -120,6 +121,56 @@ function generateMemberId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function mapDraftMembers(value: unknown): CreateParivarMemberDraft[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const normalized = value
+    .map((item) => {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+      const raw = item as Record<string, unknown>;
+      const id = typeof raw.id === 'string' ? raw.id : undefined;
+      const name = typeof raw.name === 'string' ? raw.name : undefined;
+      if (!id || !name) {
+        return null;
+      }
+      const relationship = typeof raw.relationship === 'string' ? raw.relationship : undefined;
+      const gender = typeof raw.gender === 'string' ? raw.gender : undefined;
+      const bloodGroup = typeof raw.bloodGroup === 'string' ? raw.bloodGroup : undefined;
+      const dob = typeof raw.dob === 'string' ? raw.dob : undefined;
+      const medicalConditions = Array.isArray(raw.medicalConditions)
+        ? (raw.medicalConditions.filter((value) => typeof value === 'string') as string[])
+        : undefined;
+
+      const member: CreateParivarMemberDraft = {
+        id,
+        name,
+      };
+      if (relationship) {
+        member.relationship = relationship;
+      }
+      if (gender) {
+        member.gender = gender;
+      }
+      if (bloodGroup) {
+        member.bloodGroup = bloodGroup;
+      }
+      if (dob) {
+        member.dob = dob;
+      }
+      if (medicalConditions && medicalConditions.length > 0) {
+        member.medicalConditions = medicalConditions;
+      }
+      return member;
+    })
+    .filter(Boolean) as CreateParivarMemberDraft[];
+
+  return normalized.length > 0 ? normalized : undefined;
+}
+
 export default function CreateParivarScreen() {
   const router = useRouter();
   const { themeName } = useContext(ThemePreferenceContext);
@@ -187,6 +238,8 @@ export default function CreateParivarScreen() {
           return;
         }
 
+        let localProgress = storedProgress;
+
         if (profileSnapshot.exists()) {
           const data = profileSnapshot.data() as Record<string, unknown>;
           setUserProfile({
@@ -198,19 +251,54 @@ export default function CreateParivarScreen() {
               : undefined,
             bloodGroup: typeof data.bloodGroup === 'string' ? data.bloodGroup : undefined,
           });
+
+          if (!localProgress?.familyId) {
+            const rawDraft = (data as { latestFamilyDraft?: unknown }).latestFamilyDraft;
+            if (rawDraft && typeof rawDraft === 'object' && rawDraft !== null) {
+              const { familyId: rawFamilyId, familyName: rawFamilyName, members: rawMembers } = rawDraft as {
+                familyId?: unknown;
+                familyName?: unknown;
+                members?: unknown;
+              };
+              const draftFamilyId =
+                typeof rawFamilyId === 'string' ? rawFamilyId : undefined;
+              if (draftFamilyId) {
+                const draftFamilyName =
+                  typeof rawFamilyName === 'string' ? rawFamilyName : undefined;
+                const draftMembers = mapDraftMembers(rawMembers);
+                const remoteProgress: CreateParivarProgress = {
+                  step: 2,
+                  familyId: draftFamilyId,
+                  familyName: draftFamilyName,
+                  members: draftMembers,
+                  lastUpdated: Date.now(),
+                };
+                await saveCreateParivarProgress({
+                  step: remoteProgress.step,
+                  familyId: remoteProgress.familyId,
+                  familyName: remoteProgress.familyName,
+                  members: remoteProgress.members,
+                });
+                localProgress = remoteProgress;
+              }
+            }
+          }
         }
 
-        if (storedProgress?.familyId) {
-          setFamilyId(storedProgress.familyId);
-          if (storedProgress.familyName) {
-            setFamilyName(storedProgress.familyName);
+        if (localProgress?.familyId) {
+          setFamilyId(localProgress.familyId);
+          if (localProgress.familyName) {
+            setFamilyName(localProgress.familyName);
           }
-          if (storedProgress.step) {
-            setStep(storedProgress.step);
+          if (localProgress.step) {
+            setStep(localProgress.step);
+          }
+          if (Array.isArray(localProgress.members) && localProgress.members.length > 0) {
+            setMembers(localProgress.members);
           }
 
           try {
-            const familySnapshot = await getDoc(doc(firebaseDb, 'families', storedProgress.familyId));
+            const familySnapshot = await getDoc(doc(firebaseDb, 'families', localProgress.familyId));
             if (familySnapshot.exists()) {
               const data = familySnapshot.data() as Record<string, unknown>;
               if (typeof data.name === 'string') {
@@ -218,16 +306,16 @@ export default function CreateParivarScreen() {
               }
               if (Array.isArray(data.members)) {
                 setMembers(data.members as CreateParivarMemberDraft[]);
-              } else if (Array.isArray(storedProgress.members)) {
-                setMembers(storedProgress.members);
+              } else if (Array.isArray(localProgress.members)) {
+                setMembers(localProgress.members);
               }
-            } else if (Array.isArray(storedProgress.members)) {
-              setMembers(storedProgress.members);
+            } else if (Array.isArray(localProgress.members)) {
+              setMembers(localProgress.members);
             }
           } catch (error) {
             console.warn('Unable to hydrate family data from Firestore', error);
-            if (Array.isArray(storedProgress.members)) {
-              setMembers(storedProgress.members);
+            if (Array.isArray(localProgress.members)) {
+              setMembers(localProgress.members);
             }
           }
         }
