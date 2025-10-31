@@ -8,6 +8,7 @@ import { themes } from './constants/tamagui-theme';
 const headingFont = createInterFont({
   family: 'Inter',
   size: {
+    true: 20,
     1: 14,
     2: 16,
     3: 18,
@@ -19,6 +20,7 @@ const headingFont = createInterFont({
     9: 42,
   },
   lineHeight: {
+    true: 24,
     1: 18,
     2: 20,
     3: 22,
@@ -30,6 +32,7 @@ const headingFont = createInterFont({
     9: 48,
   },
   weight: {
+    true: '600',
     1: '400',
     2: '400',
     3: '500',
@@ -45,6 +48,7 @@ const headingFont = createInterFont({
 const bodyFont = createInterFont({
   family: 'Inter',
   size: {
+    true: 16,
     1: 13,
     2: 15,
     3: 16,
@@ -56,6 +60,7 @@ const bodyFont = createInterFont({
     9: 28,
   },
   lineHeight: {
+    true: 22,
     1: 18,
     2: 20,
     3: 24,
@@ -67,6 +72,7 @@ const bodyFont = createInterFont({
     9: 42,
   },
   weight: {
+    true: '400',
     1: '400',
     2: '400',
     3: '400',

@@ -4,14 +4,12 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { Card, Text, YStack } from 'tamagui';
 
 import { ThemeColors } from '@/constants/tamagui-theme';
-import { BrandTypography } from '@/design-system';
+import { BrandTypography } from '@/design-system/tokens';
 
 type HomeNameplateProps = {
   themeName: 'light' | 'dark';
   familyName: string;
   initials: string;
-  accentColor: string;
-  accentForeground: string;
 };
 
 function CrestIcon({ tint, stroke }: { tint: string; stroke: string }) {
@@ -38,10 +36,10 @@ export const HomeNameplate = memo(function HomeNameplate({
   themeName,
   familyName,
   initials,
-  accentColor,
-  accentForeground,
 }: HomeNameplateProps) {
   const palette = ThemeColors[themeName];
+  const accentColor = palette.accent;
+  const accentForeground = palette.accentForeground;
   const gradientColors =
     themeName === 'dark'
       ? [palette.surface, palette.surfaceAlt]

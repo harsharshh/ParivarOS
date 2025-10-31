@@ -9,7 +9,8 @@ import { Avatar, Button, Card, Spinner, Text, XStack, YStack } from 'tamagui';
 import { ThemePreferenceContext } from '@/app/_layout';
 import { firebaseAuth } from '@/config/firebase';
 import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
-import { BrandSpacing, BrandTypography, HomeNameplate, ModuleCard, ParivarCtaCard, StatsCard } from '@/design-system';
+import { BrandSpacing, BrandTypography, ModuleCard, ParivarCtaCard, StatsCard } from '@/design-system';
+import { HomeNameplate } from '@/components/home-nameplate';
 import { useParivarStatus } from '@/hooks/use-parivar-status';
 import { withAlpha } from '@/utils/color';
 import { getCreateParivarProgress } from '@/utils/create-parivar-storage';
@@ -266,9 +267,6 @@ export default function HomeScreen() {
       iconColor: palette.text,
       quoteBackground: palette.surfaceAlt,
       quoteText: palette.accentStrong,
-      plateBackground: withAlpha(palette.accent, themeName === 'dark' ? 0.18 : 0.1),
-      plateBorder: withAlpha(palette.accent, themeName === 'dark' ? 0.35 : 0.2),
-      plateAccent: palette.accent,
     };
   }, [palette, themeName]);
 
@@ -447,13 +445,7 @@ export default function HomeScreen() {
         }
       >
         {familyName ? (
-          <HomeNameplate
-            themeName={themeName}
-            familyName={familyName}
-            initials={familyInitials}
-            accentColor={colors.plateAccent}
-            accentForeground={palette.accentForeground}
-          />
+          <HomeNameplate themeName={themeName} familyName={familyName} initials={familyInitials} />
         ) : null}
 
         {showCreateCTA && (

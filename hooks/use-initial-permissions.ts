@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, Platform } from 'react-native';
 import { Camera } from 'expo-camera';
-import { Audio } from 'expo-av';
 import * as Location from 'expo-location';
 
 import type { PermissionSummary, PermissionsContextValue } from './use-permissions';
@@ -69,7 +68,7 @@ export function useInitialPermissions(): PermissionsContextValue {
     }
 
     try {
-      const { status: audioStatus } = await Audio.requestPermissionsAsync();
+      const { status: audioStatus } = await Camera.requestMicrophonePermissionsAsync();
       next.microphone = audioStatus === 'granted' ? 'granted' : audioStatus === 'denied' ? 'denied' : 'undetermined';
     } catch (error) {
       console.warn('Audio permission request failed', error);

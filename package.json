@@ -25,7 +25,6 @@
     "@tamagui/shorthands": "^1.135.2",
     "@tamagui/themes": "^1.135.2",
     "expo": "~54.0.13",
-    "expo-av": "~15.0.8",
     "expo-camera": "~17.0.8",
     "expo-constants": "~18.0.9",
     "expo-firebase-recaptcha": "~2.3.1",

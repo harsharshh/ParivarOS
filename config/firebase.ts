@@ -38,6 +38,20 @@ if (!firebaseConfig) {
   }
 }
 
+if (!firebaseConfig) {
+  try {
+    // Dynamically require to avoid hard dependency when the native module isn't installed.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+    const { getFirebaseAppOptions } = require('expo-firebase-core');
+    const nativeOptions = typeof getFirebaseAppOptions === 'function' ? getFirebaseAppOptions() : undefined;
+    if (nativeOptions) {
+      firebaseConfig = nativeOptions as ExpoExtraFirebase;
+    }
+  } catch {
+    // Optional module not available; continue without native options.
+  }
+}
+
 export const isFirebaseConfigured = Boolean(firebaseConfig);
 
 let firebaseAppInstance: ReturnType<typeof getApp> | undefined;
