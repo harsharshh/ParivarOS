@@ -52,6 +52,7 @@ type MemberFormState = {
   dob: string;
   dobDate: Date | null;
   medicalConditions: string;
+  phoneNumber: string;
 };
 
 const relationshipOptions = [
@@ -92,6 +93,7 @@ function createEmptyMemberForm(): MemberFormState {
     dob: '',
     dobDate: null,
     medicalConditions: defaultMedicalSelections,
+    phoneNumber: '',
   };
 }
 
@@ -144,6 +146,7 @@ function mapDraftMembers(value: unknown): CreateParivarMemberDraft[] | undefined
       const medicalConditions = Array.isArray(raw.medicalConditions)
         ? (raw.medicalConditions.filter((value) => typeof value === 'string') as string[])
         : undefined;
+      const phoneNumber = typeof raw.phoneNumber === 'string' ? raw.phoneNumber : undefined;
 
       const member: CreateParivarMemberDraft = {
         id,
@@ -163,6 +166,9 @@ function mapDraftMembers(value: unknown): CreateParivarMemberDraft[] | undefined
       }
       if (medicalConditions && medicalConditions.length > 0) {
         member.medicalConditions = medicalConditions;
+      }
+      if (phoneNumber) {
+        member.phoneNumber = phoneNumber;
       }
       return member;
     })
@@ -360,6 +366,7 @@ export default function CreateParivarScreen() {
           ? userProfile.medicalHistory
           : undefined,
       userId: user.uid,
+      phoneNumber: user.phoneNumber ?? undefined,
     };
   }, [user, userProfile]);
 
@@ -395,6 +402,9 @@ export default function CreateParivarScreen() {
 
       if (member.userId) {
         payload.userId = member.userId;
+      }
+      if (member.phoneNumber) {
+        payload.phoneNumber = member.phoneNumber;
       }
       return payload;
     });
@@ -590,6 +600,7 @@ export default function CreateParivarScreen() {
           : existing.medicalConditions
             ? String(existing.medicalConditions)
             : defaultMedicalSelections,
+        phoneNumber: existing.phoneNumber ?? '',
       });
       setMemberTempDob(existing.dob ? parseDateString(existing.dob) : new Date(1990, 0, 1));
       setMemberSaving(false);
@@ -631,6 +642,7 @@ export default function CreateParivarScreen() {
     const name = memberForm.name.trim();
     const relationship = memberForm.relationship.trim();
     const bloodGroup = memberForm.bloodGroup.trim();
+    const cleanedPhone = memberForm.phoneNumber.replace(/[^+\d]/g, '').trim();
 
     if (!name) {
       Alert.alert('Almost there', 'Please share the member’s name.');
@@ -657,6 +669,7 @@ export default function CreateParivarScreen() {
         bloodGroup: bloodGroup || undefined,
         dob: memberForm.dob || undefined,
         medicalConditions: medicalConditions.length ? medicalConditions : undefined,
+        phoneNumber: cleanedPhone || undefined,
       };
 
       const memberCollection = editingMemberId
@@ -1218,7 +1231,224 @@ export default function CreateParivarScreen() {
                   </Text>
                 </Button>
               )}
-              <YStack gap="$2">
+              {showInlineMemberForm && (
+                <Card
+                  padding="$5"
+                  backgroundColor={colors.card}
+                  shadowColor={colors.shadow}
+                  shadowRadius={18}
+                  gap="$4"
+                >
+                  <YStack gap="$4">
+                    <YStack gap="$2">
+                      <Text fontSize={18} fontWeight="700" color={colors.text}>
+                        {editingMemberId ? 'Edit family member' : 'Add a family member'}
+                      </Text>
+                      <Text color={colors.muted} fontSize={13}>
+                        Save each member and we&apos;ll keep everything synced.
+                      </Text>
+                    </YStack>
+
+                    <YStack gap="$3">
+                      <YStack gap="$2">
+                        <Text fontWeight="600" color={colors.text}>
+                          Name
+                        </Text>
+                        <Input
+                          value={memberForm.name}
+                          onChangeText={(value) => setMemberForm((prev) => ({ ...prev, name: value }))}
+                          placeholder="Enter first name"
+                          size="$4"
+                          bg={colors.field}
+                          borderColor={colors.border}
+                          borderWidth={1}
+                          color={colors.text}
+                          placeholderTextColor={colors.muted}
+                        />
+                      </YStack>
+
+                      <YStack gap="$2">
+                        <Text fontWeight="600" color={colors.text}>
+                          Relationship with you
+                        </Text>
+                        <Button
+                          size="$4"
+                          backgroundColor={colors.field}
+                          borderColor={colors.border}
+                          borderWidth={1}
+                          justifyContent="flex-start"
+                          onPress={() =>
+                            setSelectionPicker({ type: 'relationship', tempValue: memberForm.relationship || '' })
+                          }
+                        >
+                          <Text color={memberForm.relationship ? colors.text : colors.muted}>
+                            {memberForm.relationship || 'Select relationship'}
+                          </Text>
+                        </Button>
+                      </YStack>
+
+                      <YStack gap="$2">
+                        <Text fontWeight="600" color={colors.text}>
+                          Phone number
+                        </Text>
+                        <Input
+                          value={memberForm.phoneNumber}
+                          onChangeText={(value) =>
+                            setMemberForm((prev) => ({
+                              ...prev,
+                              phoneNumber: value.replace(/[^+\d]/g, ''),
+                            }))
+                          }
+                          placeholder="e.g. +91 98765 43210"
+                          size="$4"
+                          bg={colors.field}
+                          borderColor={colors.border}
+                          borderWidth={1}
+                          color={colors.text}
+                          placeholderTextColor={colors.muted}
+                          keyboardType="phone-pad"
+                        />
+                      </YStack>
+
+                      <YStack gap="$2">
+                        <Text fontWeight="600" color={colors.text}>
+                          Gender
+                        </Text>
+                        <Button
+                          size="$4"
+                          backgroundColor={colors.field}
+                          borderColor={colors.border}
+                          borderWidth={1}
+                          justifyContent="flex-start"
+                          onPress={() =>
+                            setSelectionPicker({ type: 'gender', tempValue: memberForm.gender || '' })
+                          }
+                        >
+                          <Text color={memberForm.gender ? colors.text : colors.muted}>
+                            {memberForm.gender || 'Select gender'}
+                          </Text>
+                        </Button>
+                      </YStack>
+
+                      <YStack gap="$2">
+                        <Text fontWeight="600" color={colors.text}>
+                          Blood group
+                        </Text>
+                        <Button
+                          size="$4"
+                          backgroundColor={colors.field}
+                          borderColor={colors.border}
+                          borderWidth={1}
+                          justifyContent="flex-start"
+                          onPress={() =>
+                            setSelectionPicker({ type: 'blood', tempValue: memberForm.bloodGroup || '' })
+                          }
+                        >
+                          <Text color={memberForm.bloodGroup ? colors.text : colors.muted}>
+                            {memberForm.bloodGroup || 'Select blood group'}
+                          </Text>
+                        </Button>
+                      </YStack>
+
+                      <YStack gap="$2">
+                        <Text fontWeight="600" color={colors.text}>
+                          Date of birth
+                        </Text>
+                        <Button
+                          size="$4"
+                          backgroundColor={colors.field}
+                          borderColor={colors.border}
+                          borderWidth={1}
+                          justifyContent="flex-start"
+                          onPress={() => {
+                            const existing = memberForm.dob ? parseDateString(memberForm.dob) : undefined;
+                            setMemberTempDob(existing ?? new Date(1990, 0, 1));
+                            setMemberDobPickerVisible(true);
+                          }}
+                        >
+                          <Text color={memberForm.dob ? colors.text : colors.muted}>
+                            {memberForm.dob || 'Select birth date'}
+                          </Text>
+                        </Button>
+                      </YStack>
+
+                      <YStack gap="$2">
+                        <Text fontWeight="600" color={colors.text}>
+                          Medical conditions
+                        </Text>
+                        <XStack flexWrap="wrap" gap="$2">
+                          {medicalOptions.map((option) => {
+                            const selections = memberForm.medicalConditions
+                              .split(',')
+                              .map((value) => value.trim())
+                              .filter(Boolean);
+                            const active = selections.includes(option);
+                            return (
+                              <Button
+                                key={option}
+                                size="$2"
+                                paddingHorizontal="$3"
+                                paddingVertical="$1"
+                                borderRadius="$4"
+                                variant={active ? 'accent' : 'outlined'}
+                                onPress={() => {
+                                  setMemberForm((prev) => {
+                                    const current = prev.medicalConditions
+                                      .split(',')
+                                      .map((value) => value.trim())
+                                      .filter(Boolean);
+
+                                    let next: string[];
+                                    if (option === 'None') {
+                                      next = ['None'];
+                                    } else {
+                                      next = current.filter((value) => value !== 'None');
+                                      if (next.includes(option)) {
+                                        next = next.filter((value) => value !== option);
+                                      } else {
+                                        next = [...next, option];
+                                      }
+                                      if (next.length === 0) {
+                                        next = ['None'];
+                                      }
+                                    }
+
+                                    return {
+                                      ...prev,
+                                      medicalConditions: next.join(', '),
+                                    };
+                                  });
+                                }}
+                              >
+                                <Text fontSize={12}>{option}</Text>
+                              </Button>
+                            );
+                          })}
+                        </XStack>
+                      </YStack>
+                    </YStack>
+
+                    <XStack gap="$3">
+                      <Button flex={1} backgroundColor={colors.card} onPress={cancelMemberForm}>
+                        <Text color={colors.text} fontWeight="600">
+                          Cancel
+                        </Text>
+                      </Button>
+                      <Button
+                        flex={1}
+                        backgroundColor={colors.accent}
+                        onPress={handleSubmitMember}
+                        disabled={memberSaving}
+                      >
+                        <Text color={palette.accentForeground} fontWeight="600">
+                          {memberSaving ? 'Saving...' : editingMemberId ? 'Update member' : 'Save member'}
+                        </Text>
+                      </Button>
+                    </XStack>
+                  </YStack>
+                </Card>
+              )}
+              <YStack gap="$2" marginTop={showInlineMemberForm ? BrandSpacing.stackGap : 0}>
                 <Button
                   size="$5"
                   backgroundColor={colors.accent}
@@ -1236,201 +1466,6 @@ export default function CreateParivarScreen() {
             </YStack>
             )}
           </ScrollView>
-
-          {showInlineMemberForm && (
-            <Card
-              padding="$5"
-              backgroundColor={colors.card}
-              shadowColor={colors.shadow}
-              shadowRadius={18}
-              gap="$4"
-            >
-              <YStack gap="$4">
-                <YStack gap="$2">
-                  <Text fontSize={18} fontWeight="700" color={colors.text}>
-                    {editingMemberId ? 'Edit family member' : 'Add a family member'}
-                  </Text>
-                  <Text color={colors.muted} fontSize={13}>
-                    Save each member and we&apos;ll keep everything synced.
-                  </Text>
-                </YStack>
-
-                <YStack gap="$3">
-                  <YStack gap="$2">
-                    <Text fontWeight="600" color={colors.text}>
-                      Name
-                    </Text>
-                    <Input
-                      value={memberForm.name}
-                      onChangeText={(value) => setMemberForm((prev) => ({ ...prev, name: value }))}
-                      placeholder="Enter first name"
-                      size="$4"
-                      bg={colors.field}
-                      borderColor={colors.border}
-                      borderWidth={1}
-                      color={colors.text}
-                      placeholderTextColor={colors.muted}
-                    />
-                  </YStack>
-
-                  <YStack gap="$2">
-                    <Text fontWeight="600" color={colors.text}>
-                      Relationship with you
-                    </Text>
-                    <Button
-                      size="$4"
-                      backgroundColor={colors.field}
-                      borderColor={colors.border}
-                      borderWidth={1}
-                      justifyContent="flex-start"
-                      onPress={() =>
-                        setSelectionPicker({ type: 'relationship', tempValue: memberForm.relationship || '' })
-                      }
-                    >
-                      <Text color={memberForm.relationship ? colors.text : colors.muted}>
-                        {memberForm.relationship || 'Select relationship'}
-                      </Text>
-                    </Button>
-                  </YStack>
-
-                  <YStack gap="$2">
-                    <Text fontWeight="600" color={colors.text}>
-                      Gender
-                    </Text>
-                    <Button
-                      size="$4"
-                      backgroundColor={colors.field}
-                      borderColor={colors.border}
-                      borderWidth={1}
-                      justifyContent="flex-start"
-                      onPress={() =>
-                        setSelectionPicker({ type: 'gender', tempValue: memberForm.gender || '' })
-                      }
-                    >
-                      <Text color={memberForm.gender ? colors.text : colors.muted}>
-                        {memberForm.gender || 'Select gender'}
-                      </Text>
-                    </Button>
-                  </YStack>
-
-                  <YStack gap="$2">
-                    <Text fontWeight="600" color={colors.text}>
-                      Blood group
-                    </Text>
-                    <Button
-                      size="$4"
-                      backgroundColor={colors.field}
-                      borderColor={colors.border}
-                      borderWidth={1}
-                      justifyContent="flex-start"
-                      onPress={() =>
-                        setSelectionPicker({ type: 'blood', tempValue: memberForm.bloodGroup || '' })
-                      }
-                    >
-                      <Text color={memberForm.bloodGroup ? colors.text : colors.muted}>
-                        {memberForm.bloodGroup || 'Select blood group'}
-                      </Text>
-                    </Button>
-                  </YStack>
-
-                  <YStack gap="$2">
-                    <Text fontWeight="600" color={colors.text}>
-                      Date of birth
-                    </Text>
-                    <Button
-                      size="$4"
-                      backgroundColor={colors.field}
-                      borderColor={colors.border}
-                      borderWidth={1}
-                      justifyContent="flex-start"
-                      onPress={() => {
-                        const existing = memberForm.dob ? parseDateString(memberForm.dob) : undefined;
-                        setMemberTempDob(existing ?? new Date(1990, 0, 1));
-                        setMemberDobPickerVisible(true);
-                      }}
-                    >
-                      <Text color={memberForm.dob ? colors.text : colors.muted}>
-                        {memberForm.dob || 'Select birth date'}
-                      </Text>
-                    </Button>
-                  </YStack>
-
-                  <YStack gap="$2">
-                    <Text fontWeight="600" color={colors.text}>
-                      Medical conditions
-                    </Text>
-                    <XStack flexWrap="wrap" gap="$2">
-                      {medicalOptions.map((option) => {
-                        const selections = memberForm.medicalConditions
-                          .split(',')
-                          .map((value) => value.trim())
-                          .filter(Boolean);
-                        const active = selections.includes(option);
-                        return (
-                          <Button
-                            key={option}
-                            size="$2"
-                            paddingHorizontal="$3"
-                            paddingVertical="$1"
-                            borderRadius="$4"
-                            variant={active ? 'accent' : 'outlined'}
-                            onPress={() => {
-                              setMemberForm((prev) => {
-                                const current = prev.medicalConditions
-                                  .split(',')
-                                  .map((value) => value.trim())
-                                  .filter(Boolean);
-
-                                let next: string[];
-                                if (option === 'None') {
-                                  next = ['None'];
-                                } else {
-                                  next = current.filter((value) => value !== 'None');
-                                  if (next.includes(option)) {
-                                    next = next.filter((value) => value !== option);
-                                  } else {
-                                    next = [...next, option];
-                                  }
-                                  if (next.length === 0) {
-                                    next = ['None'];
-                                  }
-                                }
-
-                                return {
-                                  ...prev,
-                                  medicalConditions: next.join(', '),
-                                };
-                              });
-                            }}
-                          >
-                            <Text fontSize={12}>{option}</Text>
-                          </Button>
-                        );
-                      })}
-                    </XStack>
-                  </YStack>
-                </YStack>
-
-                <XStack gap="$3">
-                  <Button flex={1} backgroundColor={colors.card} onPress={cancelMemberForm}>
-                    <Text color={colors.text} fontWeight="600">
-                      Cancel
-                    </Text>
-                  </Button>
-                  <Button
-                    flex={1}
-                    backgroundColor={colors.accent}
-                    onPress={handleSubmitMember}
-                    disabled={memberSaving}
-                  >
-                    <Text color={palette.accentForeground} fontWeight="600">
-                      {memberSaving ? 'Saving...' : editingMemberId ? 'Update member' : 'Save member'}
-                    </Text>
-                  </Button>
-                </XStack>
-              </YStack>
-            </Card>
-          )}
         </YStack>
       </KeyboardAvoidingView>
 

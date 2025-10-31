@@ -11,6 +11,7 @@ export type CreateParivarMemberDraft = {
   relationship?: string;
   medicalConditions?: string[];
   userId?: string;
+  phoneNumber?: string;
 };
 
 export type CreateParivarProgress = {
