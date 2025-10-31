@@ -1,7 +1,8 @@
 import { Edit3, LogOut, Moon, Settings, Shield, Sun, UsersRound } from '@tamagui/lucide-icons';
 import { doc, getDoc } from 'firebase/firestore';
-import { useContext, useEffect, useMemo, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { Alert, ScrollView } from 'react-native';
 import { Avatar, Button, Card, ListItem, Separator, Switch, Text, XStack, YStack } from 'tamagui';
 
 import { ThemePreferenceContext } from '@/app/_layout';
@@ -10,8 +11,10 @@ import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography } from '@/design-system';
 import { withAlpha } from '@/utils/color';
 import { usePermissions } from '@/hooks/use-permissions';
+import { clearCreateParivarProgress } from '@/utils/create-parivar-storage';
 
 export default function AvatarScreen() {
+  const router = useRouter();
   const { themeName, setThemeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
   const permissions = usePermissions();
@@ -61,6 +64,37 @@ export default function AvatarScreen() {
 
     void loadProfile();
   }, []);
+
+  const handleLogout = useCallback(() => {
+    Alert.alert(
+      'Log out of ParivarOS?',
+      'You can always sign back in to continue building your Parivar.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Log out',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              try {
+                await clearCreateParivarProgress();
+              } catch (error) {
+                console.warn('Failed to clear create parivar progress during logout', error);
+              }
+              try {
+                await firebaseAuth?.signOut();
+              } catch (error) {
+                console.warn('Failed to sign out', error);
+                Alert.alert('Logout failed', 'Something went wrong while signing you out. Please try again.');
+                return;
+              }
+              router.replace('/auth/otp');
+            })();
+          },
+        },
+      ]
+    );
+  }, [router]);
 
   return (
     <ScrollView
@@ -184,6 +218,7 @@ export default function AvatarScreen() {
             icon={LogOut}
             backgroundColor={colors.surface}
             pressTheme
+            onPress={handleLogout}
           >
             <ListItem.Text numberOfLines={1} color={colors.text}>
               Logout
