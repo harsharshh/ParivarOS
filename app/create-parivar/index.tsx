@@ -831,17 +831,13 @@ export default function CreateParivarScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          style={{ flex: 1, backgroundColor: colors.background }}
-          contentContainerStyle={{
-            paddingHorizontal: BrandSpacing.gutter,
-            paddingBottom: BrandSpacing.stackGap * 2,
-            paddingTop: BrandSpacing.elementGap,
-            gap: BrandSpacing.stackGap,
-          }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <YStack marginBottom={BrandSpacing.elementGap / 1.5}>
+        <YStack flex={1} backgroundColor={colors.background}>
+          <YStack
+            paddingHorizontal={BrandSpacing.gutter}
+            paddingTop={BrandSpacing.elementGap}
+            paddingBottom={BrandSpacing.stackGap / 1.5}
+            bg={colors.background}
+          >
             <XStack ai="center" gap="$3">
               <Button
                 size="$3"
@@ -869,123 +865,135 @@ export default function CreateParivarScreen() {
             </XStack>
           </YStack>
 
-          <Card padding="$4" backgroundColor={colors.card} alignSelf="center" shadowColor={colors.shadow} shadowRadius={18}>
-            <XStack ai="center" jc="center" gap="$4">
-              {steps.map((item, index) => {
-                const isActive = step === item.id;
-                const isCompleted = step > item.id;
-                const bubbleColor = isActive || isCompleted ? colors.accent : colors.accentFaint;
-                return (
-                  <Fragment key={item.id}>
-                    <YStack ai="center" gap="$2">
-                      <YStack
-                        width={44}
-                        height={44}
-                        borderRadius={22}
-                        ai="center"
-                        jc="center"
-                        backgroundColor={bubbleColor}
-                      >
-                        {isCompleted ? (
-                          <Check size={20} color="#fff" />
-                        ) : (
-                          <Text color={isActive ? '#fff' : colors.muted} fontWeight="700">
-                            {item.id}
-                          </Text>
-                        )}
+          <YStack paddingHorizontal={BrandSpacing.gutter} paddingBottom={BrandSpacing.stackGap} bg={colors.background}>
+            <Card padding="$4" backgroundColor={colors.card} alignSelf="center" shadowColor={colors.shadow} shadowRadius={18}>
+              <XStack ai="center" jc="center" gap="$4">
+                {steps.map((item, index) => {
+                  const isActive = step === item.id;
+                  const isCompleted = step > item.id;
+                  const bubbleColor = isActive || isCompleted ? colors.accent : colors.accentFaint;
+                  return (
+                    <Fragment key={item.id}>
+                      <YStack ai="center" gap="$2">
+                        <YStack
+                          width={44}
+                          height={44}
+                          borderRadius={22}
+                          ai="center"
+                          jc="center"
+                          backgroundColor={bubbleColor}
+                        >
+                          {isCompleted ? (
+                            <Check size={20} color="#fff" />
+                          ) : (
+                            <Text color={isActive ? '#fff' : colors.muted} fontWeight="700">
+                              {item.id}
+                            </Text>
+                          )}
+                        </YStack>
+                        <Text
+                          fontWeight={isActive ? '700' : '600'}
+                          fontSize={13}
+                          color={isActive ? colors.text : colors.muted}
+                          textAlign="center"
+                        >
+                          {item.label}
+                        </Text>
                       </YStack>
-                      <Text
-                        fontWeight={isActive ? '700' : '600'}
-                        fontSize={13}
-                        color={isActive ? colors.text : colors.muted}
-                        textAlign="center"
-                      >
-                        {item.label}
-                      </Text>
-                    </YStack>
-                    {index < steps.length - 1 && (
-                      <View
-                        style={{
-                          width: 48,
-                          height: 2,
-                          backgroundColor: isCompleted ? colors.accent : colors.accentFaint,
-                        }}
-                      />
-                    )}
-                  </Fragment>
-                );
-              })}
-            </XStack>
-          </Card>
-
-          {step === 1 ? (
-            <Card
-              elevate
-              padding="$5"
-              backgroundColor={colors.card}
-              shadowColor={colors.shadow}
-              shadowRadius={22}
-            >
-              <YStack gap="$4">
-                <YStack ai="center" marginTop={-BrandSpacing.elementGap / 2}>
-                  <FamilyTreeIllustration width={260} height={200} mode={themeName} />
-                </YStack>
-
-                <YStack gap="$2">
-                  <Text fontSize={18} fontWeight="700" color={colors.text}>
-                    Give your Parivar a heartfelt name
-                  </Text>
-                  <Text color={colors.muted}>
-                    This name appears on invites, stories, and every gentle reminder.
-                  </Text>
-                </YStack>
-
-                <YStack gap="$3">
-                  <Text fontWeight="600" color={colors.text}>
-                    Parivar Name
-                  </Text>
-                  <Input
-                    value={familyName}
-                    onChangeText={(value) => {
-                      setFamilyName(value);
-                      setFamilyNameError(null);
-                    }}
-                    placeholder="e.g. The Sharma Parivar"
-                    autoCapitalize="words"
-                    size="$5"
-                    bg={colors.field}
-                    borderColor={familyNameError ? palette.danger : colors.border}
-                    borderWidth={1}
-                    color={colors.text}
-                    placeholderTextColor={colors.muted}
-                  />
-                  {familyNameError ? (
-                    <Text color={palette.danger} fontSize={13}>
-                      {familyNameError}
-                    </Text>
-                  ) : (
-                    <Text color={colors.muted} fontSize={13}>
-                      Pick something unique. We&apos;ll make sure no one else is using it.
-                    </Text>
-                  )}
-                </YStack>
-
-                <YStack marginTop={BrandSpacing.elementGap / 2}>
-                  <Button
-                    size="$5"
-                    backgroundColor={colors.accent}
-                    onPress={handleSaveFamilyName}
-                    disabled={familyNameBusy}
-                  >
-                    <Text color={palette.accentForeground} fontWeight="600">
-                      {familyNameBusy ? 'Saving...' : 'Save & Continue'}
-                    </Text>
-                  </Button>
-                </YStack>
-              </YStack>
+                      {index < steps.length - 1 && (
+                        <View
+                          style={{
+                            width: 48,
+                            height: 2,
+                            backgroundColor: isCompleted ? colors.accent : colors.accentFaint,
+                          }}
+                        />
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </XStack>
             </Card>
-          ) : (
-            <YStack gap="$5">
+          </YStack>
+
+          <ScrollView
+            style={{ flex: 1, backgroundColor: colors.background }}
+            contentContainerStyle={{
+              paddingHorizontal: BrandSpacing.gutter,
+              paddingBottom: BrandSpacing.stackGap * 2,
+              paddingTop: BrandSpacing.elementGap,
+              gap: BrandSpacing.stackGap,
+            }}
+            keyboardShouldPersistTaps="handled"
+          >
+            {step === 1 ? (
+              <Card
+                elevate
+                padding="$5"
+                backgroundColor={colors.card}
+                shadowColor={colors.shadow}
+                shadowRadius={22}
+              >
+                <YStack gap="$4">
+                  <YStack ai="center" marginTop={-BrandSpacing.elementGap / 2}>
+                    <FamilyTreeIllustration width={260} height={200} mode={themeName} />
+                  </YStack>
+
+                  <YStack gap="$2">
+                    <Text fontSize={18} fontWeight="700" color={colors.text}>
+                      Give your Parivar a heartfelt name
+                    </Text>
+                    <Text color={colors.muted}>
+                      This name appears on invites, stories, and every gentle reminder.
+                    </Text>
+                  </YStack>
+
+                  <YStack gap="$3">
+                    <Text fontWeight="600" color={colors.text}>
+                      Parivar Name
+                    </Text>
+                    <Input
+                      value={familyName}
+                      onChangeText={(value) => {
+                        setFamilyName(value);
+                        setFamilyNameError(null);
+                      }}
+                      placeholder="e.g. The Sharma Parivar"
+                      autoCapitalize="words"
+                      size="$5"
+                      bg={colors.field}
+                      borderColor={familyNameError ? palette.danger : colors.border}
+                      borderWidth={1}
+                      color={colors.text}
+                      placeholderTextColor={colors.muted}
+                    />
+                    {familyNameError ? (
+                      <Text color={palette.danger} fontSize={13}>
+                        {familyNameError}
+                      </Text>
+                    ) : (
+                      <Text color={colors.muted} fontSize={13}>
+                        Pick something unique. We&apos;ll make sure no one else is using it.
+                      </Text>
+                    )}
+                  </YStack>
+
+                  <YStack marginTop={BrandSpacing.elementGap / 2}>
+                    <Button
+                      size="$5"
+                      backgroundColor={colors.accent}
+                      onPress={handleSaveFamilyName}
+                      disabled={familyNameBusy}
+                    >
+                      <Text color={palette.accentForeground} fontWeight="600">
+                        {familyNameBusy ? 'Saving...' : 'Save & Continue'}
+                      </Text>
+                    </Button>
+                  </YStack>
+                </YStack>
+              </Card>
+            ) : (
+              <YStack gap="$5">
               <Card padding="$4" gap="$3" backgroundColor={colors.card} shadowColor={colors.shadow} shadowRadius={16}>
                 {isEditingFamilyName ? (
                   <YStack gap="$3">
@@ -1029,9 +1037,7 @@ export default function CreateParivarScreen() {
                       <Text fontSize={16} fontWeight="700" color={colors.text}>
                         {familyName}
                       </Text>
-                      <Text color={colors.muted}>
-                        Add members for memories together.
-                      </Text>
+                      
                     </YStack>
                     <Button
                       size="$2"
@@ -1140,202 +1146,205 @@ export default function CreateParivarScreen() {
                 </Text>
               </YStack>
             </YStack>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
+            )}
+          </ScrollView>
 
-      {showInlineMemberForm && (
-        <Card
-          padding="$5"
-          backgroundColor={colors.card}
-          shadowColor={colors.shadow}
-          shadowRadius={18}
-          gap="$4"
-        >
-          <YStack gap="$4">
-            <YStack gap="$2">
-              <Text fontSize={18} fontWeight="700" color={colors.text}>
-                {editingMemberId ? 'Edit family member' : 'Add a family member'}
-              </Text>
-              <Text color={colors.muted} fontSize={13}>
-                Save each member and we&apos;ll keep everything synced.
-              </Text>
-            </YStack>
-
-            <YStack gap="$3">
-              <YStack gap="$2">
-                <Text fontWeight="600" color={colors.text}>
-                  Name
-                </Text>
-                <Input
-                  value={memberForm.name}
-                  onChangeText={(value) => setMemberForm((prev) => ({ ...prev, name: value }))}
-                  placeholder="Enter first name"
-                  size="$4"
-                  bg={colors.field}
-                  borderColor={colors.border}
-                  borderWidth={1}
-                  color={colors.text}
-                  placeholderTextColor={colors.muted}
-                />
-              </YStack>
-
-              <YStack gap="$2">
-                <Text fontWeight="600" color={colors.text}>
-                  Relationship with you
-                </Text>
-                <Button
-                  size="$4"
-                  backgroundColor={colors.field}
-                  borderColor={colors.border}
-                  borderWidth={1}
-                  justifyContent="flex-start"
-                  onPress={() =>
-                    setSelectionPicker({ type: 'relationship', tempValue: memberForm.relationship || '' })
-                  }
-                >
-                  <Text color={memberForm.relationship ? colors.text : colors.muted}>
-                    {memberForm.relationship || 'Select relationship'}
+          {showInlineMemberForm && (
+            <Card
+              padding="$5"
+              backgroundColor={colors.card}
+              shadowColor={colors.shadow}
+              shadowRadius={18}
+              gap="$4"
+            >
+              <YStack gap="$4">
+                <YStack gap="$2">
+                  <Text fontSize={18} fontWeight="700" color={colors.text}>
+                    {editingMemberId ? 'Edit family member' : 'Add a family member'}
                   </Text>
-                </Button>
-              </YStack>
-
-              <YStack gap="$2">
-                <Text fontWeight="600" color={colors.text}>
-                  Gender
-                </Text>
-                <Button
-                  size="$4"
-                  backgroundColor={colors.field}
-                  borderColor={colors.border}
-                  borderWidth={1}
-                  justifyContent="flex-start"
-                  onPress={() =>
-                    setSelectionPicker({ type: 'gender', tempValue: memberForm.gender || '' })
-                  }
-                >
-                  <Text color={memberForm.gender ? colors.text : colors.muted}>
-                    {memberForm.gender || 'Select gender'}
+                  <Text color={colors.muted} fontSize={13}>
+                    Save each member and we&apos;ll keep everything synced.
                   </Text>
-                </Button>
-              </YStack>
+                </YStack>
 
-              <YStack gap="$2">
-                <Text fontWeight="600" color={colors.text}>
-                  Blood group
-                </Text>
-                <Button
-                  size="$4"
-                  backgroundColor={colors.field}
-                  borderColor={colors.border}
-                  borderWidth={1}
-                  justifyContent="flex-start"
-                  onPress={() =>
-                    setSelectionPicker({ type: 'blood', tempValue: memberForm.bloodGroup || '' })
-                  }
-                >
-                  <Text color={memberForm.bloodGroup ? colors.text : colors.muted}>
-                    {memberForm.bloodGroup || 'Select blood group'}
-                  </Text>
-                </Button>
-              </YStack>
+                <YStack gap="$3">
+                  <YStack gap="$2">
+                    <Text fontWeight="600" color={colors.text}>
+                      Name
+                    </Text>
+                    <Input
+                      value={memberForm.name}
+                      onChangeText={(value) => setMemberForm((prev) => ({ ...prev, name: value }))}
+                      placeholder="Enter first name"
+                      size="$4"
+                      bg={colors.field}
+                      borderColor={colors.border}
+                      borderWidth={1}
+                      color={colors.text}
+                      placeholderTextColor={colors.muted}
+                    />
+                  </YStack>
 
-              <YStack gap="$2">
-                <Text fontWeight="600" color={colors.text}>
-                  Date of birth
-                </Text>
-                <Button
-                  size="$4"
-                  backgroundColor={colors.field}
-                  borderColor={colors.border}
-                  borderWidth={1}
-                  justifyContent="flex-start"
-                  onPress={() => {
-                    const existing = memberForm.dob ? parseDateString(memberForm.dob) : undefined;
-                    setMemberTempDob(existing ?? new Date(1990, 0, 1));
-                    setMemberDobPickerVisible(true);
-                  }}
-                >
-                  <Text color={memberForm.dob ? colors.text : colors.muted}>{memberForm.dob || 'Select birth date'}</Text>
-                </Button>
-              </YStack>
-
-            <YStack gap="$2">
-              <Text fontWeight="600" color={colors.text}>
-                Medical conditions
-              </Text>
-              <XStack flexWrap="wrap" gap="$2">
-                {medicalOptions.map((option) => {
-                  const selections = memberForm.medicalConditions
-                    .split(',')
-                    .map((value) => value.trim())
-                    .filter(Boolean);
-                  const active = selections.includes(option);
-                  return (
+                  <YStack gap="$2">
+                    <Text fontWeight="600" color={colors.text}>
+                      Relationship with you
+                    </Text>
                     <Button
-                      key={option}
-                      size="$2"
-                      paddingHorizontal="$3"
-                      paddingVertical="$1"
-                      borderRadius="$4"
-                      variant={active ? 'accent' : 'outlined'}
+                      size="$4"
+                      backgroundColor={colors.field}
+                      borderColor={colors.border}
+                      borderWidth={1}
+                      justifyContent="flex-start"
+                      onPress={() =>
+                        setSelectionPicker({ type: 'relationship', tempValue: memberForm.relationship || '' })
+                      }
+                    >
+                      <Text color={memberForm.relationship ? colors.text : colors.muted}>
+                        {memberForm.relationship || 'Select relationship'}
+                      </Text>
+                    </Button>
+                  </YStack>
+
+                  <YStack gap="$2">
+                    <Text fontWeight="600" color={colors.text}>
+                      Gender
+                    </Text>
+                    <Button
+                      size="$4"
+                      backgroundColor={colors.field}
+                      borderColor={colors.border}
+                      borderWidth={1}
+                      justifyContent="flex-start"
+                      onPress={() =>
+                        setSelectionPicker({ type: 'gender', tempValue: memberForm.gender || '' })
+                      }
+                    >
+                      <Text color={memberForm.gender ? colors.text : colors.muted}>
+                        {memberForm.gender || 'Select gender'}
+                      </Text>
+                    </Button>
+                  </YStack>
+
+                  <YStack gap="$2">
+                    <Text fontWeight="600" color={colors.text}>
+                      Blood group
+                    </Text>
+                    <Button
+                      size="$4"
+                      backgroundColor={colors.field}
+                      borderColor={colors.border}
+                      borderWidth={1}
+                      justifyContent="flex-start"
+                      onPress={() =>
+                        setSelectionPicker({ type: 'blood', tempValue: memberForm.bloodGroup || '' })
+                      }
+                    >
+                      <Text color={memberForm.bloodGroup ? colors.text : colors.muted}>
+                        {memberForm.bloodGroup || 'Select blood group'}
+                      </Text>
+                    </Button>
+                  </YStack>
+
+                  <YStack gap="$2">
+                    <Text fontWeight="600" color={colors.text}>
+                      Date of birth
+                    </Text>
+                    <Button
+                      size="$4"
+                      backgroundColor={colors.field}
+                      borderColor={colors.border}
+                      borderWidth={1}
+                      justifyContent="flex-start"
                       onPress={() => {
-                        setMemberForm((prev) => {
-                          const current = prev.medicalConditions
-                            .split(',')
-                            .map((value) => value.trim())
-                            .filter(Boolean);
-
-                          let next: string[];
-                          if (option === 'None') {
-                            next = ['None'];
-                          } else {
-                            next = current.filter((value) => value !== 'None');
-                            if (next.includes(option)) {
-                              next = next.filter((value) => value !== option);
-                            } else {
-                              next = [...next, option];
-                            }
-                            if (next.length === 0) {
-                              next = ['None'];
-                            }
-                          }
-
-                          return {
-                            ...prev,
-                            medicalConditions: next.join(', '),
-                          };
-                        });
+                        const existing = memberForm.dob ? parseDateString(memberForm.dob) : undefined;
+                        setMemberTempDob(existing ?? new Date(1990, 0, 1));
+                        setMemberDobPickerVisible(true);
                       }}
                     >
-                      <Text fontSize={12}>{option}</Text>
+                      <Text color={memberForm.dob ? colors.text : colors.muted}>
+                        {memberForm.dob || 'Select birth date'}
+                      </Text>
                     </Button>
-                  );
-                })}
-              </XStack>
-            </YStack>
-            </YStack>
+                  </YStack>
 
-            <XStack gap="$3">
-              <Button flex={1} backgroundColor={colors.card} onPress={cancelMemberForm}>
-                <Text color={colors.text} fontWeight="600">
-                  Cancel
-                </Text>
-              </Button>
-            <Button
-              flex={1}
-              backgroundColor={colors.accent}
-              onPress={handleSubmitMember}
-              disabled={memberSaving}
-            >
-              <Text color={palette.accentForeground} fontWeight="600">
-                {memberSaving ? 'Saving...' : editingMemberId ? 'Update member' : 'Save member'}
-              </Text>
-            </Button>
-            </XStack>
-          </YStack>
-        </Card>
-      )}
+                  <YStack gap="$2">
+                    <Text fontWeight="600" color={colors.text}>
+                      Medical conditions
+                    </Text>
+                    <XStack flexWrap="wrap" gap="$2">
+                      {medicalOptions.map((option) => {
+                        const selections = memberForm.medicalConditions
+                          .split(',')
+                          .map((value) => value.trim())
+                          .filter(Boolean);
+                        const active = selections.includes(option);
+                        return (
+                          <Button
+                            key={option}
+                            size="$2"
+                            paddingHorizontal="$3"
+                            paddingVertical="$1"
+                            borderRadius="$4"
+                            variant={active ? 'accent' : 'outlined'}
+                            onPress={() => {
+                              setMemberForm((prev) => {
+                                const current = prev.medicalConditions
+                                  .split(',')
+                                  .map((value) => value.trim())
+                                  .filter(Boolean);
+
+                                let next: string[];
+                                if (option === 'None') {
+                                  next = ['None'];
+                                } else {
+                                  next = current.filter((value) => value !== 'None');
+                                  if (next.includes(option)) {
+                                    next = next.filter((value) => value !== option);
+                                  } else {
+                                    next = [...next, option];
+                                  }
+                                  if (next.length === 0) {
+                                    next = ['None'];
+                                  }
+                                }
+
+                                return {
+                                  ...prev,
+                                  medicalConditions: next.join(', '),
+                                };
+                              });
+                            }}
+                          >
+                            <Text fontSize={12}>{option}</Text>
+                          </Button>
+                        );
+                      })}
+                    </XStack>
+                  </YStack>
+                </YStack>
+
+                <XStack gap="$3">
+                  <Button flex={1} backgroundColor={colors.card} onPress={cancelMemberForm}>
+                    <Text color={colors.text} fontWeight="600">
+                      Cancel
+                    </Text>
+                  </Button>
+                  <Button
+                    flex={1}
+                    backgroundColor={colors.accent}
+                    onPress={handleSubmitMember}
+                    disabled={memberSaving}
+                  >
+                    <Text color={palette.accentForeground} fontWeight="600">
+                      {memberSaving ? 'Saving...' : editingMemberId ? 'Update member' : 'Save member'}
+                    </Text>
+                  </Button>
+                </XStack>
+              </YStack>
+            </Card>
+          )}
+        </YStack>
+      </KeyboardAvoidingView>
 
       {selectionPicker && (
         <Modal transparent visible animationType="fade">
