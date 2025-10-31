@@ -1,7 +1,7 @@
+import { MessageCircle, Send, Smile } from '@tamagui/lucide-icons';
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Smile, Send, MessageCircle } from '@tamagui/lucide-icons';
 import { Button, Input, Text, XStack, YStack } from 'tamagui';
 
 import { ThemePreferenceContext } from '@/app/_layout';
@@ -140,10 +140,10 @@ export default function ConnectScreen() {
                 fontWeight="700"
                 color={colors.text}
               >
-                Parivar Commons Chat
+                Connect+
               </Text>
               <Text color={colors.secondary} fontSize={14}>
-                A global lounge for every connected family. Share updates, plans, and love with the whole parivar.
+                Share updates, plans, and love with the whole parivar.
               </Text>
             </YStack>
           </XStack>

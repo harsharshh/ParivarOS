@@ -187,10 +187,10 @@ export default function ExploreScreen() {
             </XStack>
             <YStack flex={1} gap="$1">
               <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={20} color={colors.text} fontWeight="700">
-                Explore Parivar Networks
+                Parivar +
               </Text>
               <Text color={colors.secondary} fontSize={14}>
-                Discover insights and shared spaces across every connected family.
+                Discover every connected family.
               </Text>
             </YStack>
           </XStack>

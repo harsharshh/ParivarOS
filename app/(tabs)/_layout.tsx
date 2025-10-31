@@ -37,7 +37,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="connect"
         options={{
-          title: 'Connect',
+          title: 'Connect+',
           tabBarIcon: ({ color }) => <Ionicons name="chatbubbles" size={24} color={color} />,
         }}
       />

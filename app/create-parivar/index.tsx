@@ -586,7 +586,7 @@ export default function CreateParivarScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -601,31 +601,33 @@ export default function CreateParivarScreen() {
           }}
           keyboardShouldPersistTaps="handled"
         >
-          <XStack ai="center" gap="$3">
-            <Button
-              size="$3"
-              circular
-              icon={<ArrowLeft color={colors.text} size={18} />}
-              backgroundColor={colors.card}
-              shadowColor={colors.shadow}
-              shadowRadius={12}
-              pressStyle={{ scale: 0.94 }}
-              onPress={handleGoBack}
-            />
-            <YStack>
-              <Text
-                fontSize={22}
-                fontFamily={BrandTypography.tagline.fontFamily}
-                fontWeight={BrandTypography.tagline.fontWeight}
-                color={colors.text}
-              >
-                Create your Parivar
-              </Text>
-              <Text color={colors.muted}>
-                A warm home for every generation and story.
-              </Text>
-            </YStack>
-          </XStack>
+          <YStack marginBottom={BrandSpacing.elementGap / 1.5}>
+            <XStack ai="center" gap="$3">
+              <Button
+                size="$3"
+                circular
+                icon={<ArrowLeft color={colors.text} size={18} />}
+                backgroundColor={colors.field}
+                shadowColor={withAlpha(colors.accent, 0.12)}
+                shadowRadius={10}
+                pressStyle={{ scale: 0.94 }}
+                onPress={handleGoBack}
+              />
+              <YStack flex={1} gap="$1">
+                <Text
+                  fontSize={22}
+                  fontFamily={BrandTypography.tagline.fontFamily}
+                  fontWeight={BrandTypography.tagline.fontWeight}
+                  color={colors.text}
+                >
+                  Create your Parivar
+                </Text>
+                <Text color={colors.muted}>
+                  A warm home for every generation and story.
+                </Text>
+              </YStack>
+            </XStack>
+          </YStack>
 
           <Card padding="$4" backgroundColor={colors.card} alignSelf="center" shadowColor={colors.shadow} shadowRadius={18}>
             <XStack ai="center" jc="center" gap="$4">
@@ -684,8 +686,8 @@ export default function CreateParivarScreen() {
               shadowColor={colors.shadow}
               shadowRadius={22}
             >
-              <YStack gap="$5">
-                <YStack ai="center">
+              <YStack gap="$4">
+                <YStack ai="center" marginTop={-BrandSpacing.elementGap / 2}>
                   <FamilyTreeIllustration width={260} height={200} mode={themeName} />
                 </YStack>
 
@@ -728,16 +730,18 @@ export default function CreateParivarScreen() {
                   )}
                 </YStack>
 
-                <Button
-                  size="$5"
-                  backgroundColor={colors.accent}
-                  onPress={handleSaveFamilyName}
-                  disabled={familyNameBusy}
-                >
-                  <Text color={palette.accentForeground} fontWeight="600">
-                    {familyNameBusy ? 'Saving...' : 'Save & Continue'}
-                  </Text>
-                </Button>
+                <YStack marginTop={BrandSpacing.elementGap / 2}>
+                  <Button
+                    size="$5"
+                    backgroundColor={colors.accent}
+                    onPress={handleSaveFamilyName}
+                    disabled={familyNameBusy}
+                  >
+                    <Text color={palette.accentForeground} fontWeight="600">
+                      {familyNameBusy ? 'Saving...' : 'Save & Continue'}
+                    </Text>
+                  </Button>
+                </YStack>
               </YStack>
             </Card>
           ) : (
