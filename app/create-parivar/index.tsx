@@ -72,6 +72,7 @@ const genderOptions = ['Female', 'Male', 'Non-binary', 'Prefer not to say'];
 const bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const medicalOptions = ['None', 'Diabetes', 'Hypertension', 'Asthma', 'Allergies', 'Heart Conditions'];
 const defaultMedicalSelections = medicalOptions[0];
+const defaultPhoneCountryCode = '+91';
 
 const steps = [
   {
@@ -121,6 +122,19 @@ function getAgeFromDate(value?: string) {
 
 function generateMemberId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function extractLocalPhone(value?: string) {
+  if (!value) {
+    return '';
+  }
+  const normalized = value.replace(/\s+/g, '');
+  const withoutCode = normalized.startsWith(defaultPhoneCountryCode)
+    ? normalized.slice(defaultPhoneCountryCode.length)
+    : normalized.startsWith('+')
+      ? normalized.slice(1)
+      : normalized;
+  return withoutCode.replace(/\D/g, '');
 }
 
 function mapDraftMembers(value: unknown): CreateParivarMemberDraft[] | undefined {
@@ -600,7 +614,7 @@ export default function CreateParivarScreen() {
           : existing.medicalConditions
             ? String(existing.medicalConditions)
             : defaultMedicalSelections,
-        phoneNumber: existing.phoneNumber ?? '',
+        phoneNumber: extractLocalPhone(existing.phoneNumber),
       });
       setMemberTempDob(existing.dob ? parseDateString(existing.dob) : new Date(1990, 0, 1));
       setMemberSaving(false);
@@ -642,7 +656,7 @@ export default function CreateParivarScreen() {
     const name = memberForm.name.trim();
     const relationship = memberForm.relationship.trim();
     const bloodGroup = memberForm.bloodGroup.trim();
-    const cleanedPhone = memberForm.phoneNumber.replace(/[^+\d]/g, '').trim();
+    const cleanedPhone = memberForm.phoneNumber.replace(/\D/g, '').trim();
 
     if (!name) {
       Alert.alert('Almost there', 'Please share the member’s name.');
@@ -669,7 +683,7 @@ export default function CreateParivarScreen() {
         bloodGroup: bloodGroup || undefined,
         dob: memberForm.dob || undefined,
         medicalConditions: medicalConditions.length ? medicalConditions : undefined,
-        phoneNumber: cleanedPhone || undefined,
+        phoneNumber: cleanedPhone ? `${defaultPhoneCountryCode}${cleanedPhone}` : undefined,
       };
 
       const memberCollection = editingMemberId
@@ -1291,23 +1305,37 @@ export default function CreateParivarScreen() {
                         <Text fontWeight="600" color={colors.text}>
                           Phone number
                         </Text>
-                        <Input
-                          value={memberForm.phoneNumber}
-                          onChangeText={(value) =>
-                            setMemberForm((prev) => ({
-                              ...prev,
-                              phoneNumber: value.replace(/[^+\d]/g, ''),
-                            }))
-                          }
-                          placeholder="e.g. +91 98765 43210"
-                          size="$4"
-                          bg={colors.field}
-                          borderColor={colors.border}
+                        <XStack
+                          ai="center"
+                          gap="$2"
+                          borderRadius="$5"
                           borderWidth={1}
-                          color={colors.text}
-                          placeholderTextColor={colors.muted}
-                          keyboardType="phone-pad"
-                        />
+                          borderColor={colors.border}
+                          paddingHorizontal="$3"
+                          paddingVertical="$2"
+                          backgroundColor={colors.field}
+                        >
+                          <Text color={colors.text} fontWeight="600">
+                            {defaultPhoneCountryCode}
+                          </Text>
+                          <Input
+                            flex={1}
+                            borderWidth={0}
+                            backgroundColor="transparent"
+                            value={memberForm.phoneNumber}
+                            onChangeText={(value) =>
+                              setMemberForm((prev) => ({
+                                ...prev,
+                                phoneNumber: value.replace(/\D/g, ''),
+                              }))
+                            }
+                            placeholder="9876543210"
+                            size="$4"
+                            color={colors.text}
+                            placeholderTextColor={colors.muted}
+                            keyboardType="number-pad"
+                          />
+                        </XStack>
                       </YStack>
 
                       <YStack gap="$2">
