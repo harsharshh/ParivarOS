@@ -7,6 +7,7 @@ export type CreateParivarMemberDraft = {
   name: string;
   dob?: string;
   gender?: string;
+  bloodGroup?: string;
   relationship?: string;
   medicalConditions?: string[];
   userId?: string;

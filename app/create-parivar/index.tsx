@@ -1,34 +1,20 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import { useRouter } from 'expo-router';
-import { Fragment, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Check, Plus, UserRound } from '@tamagui/lucide-icons';
-import {
-  Button,
-  Card,
-  Input,
-  Spinner,
-  Text,
-  TextArea,
-  XStack,
-  YStack,
-} from 'tamagui';
+import { useRouter } from 'expo-router';
 import {
   arrayUnion,
-  collection,
   deleteField,
   doc,
   getDoc,
-  getDocs,
-  limit,
-  query,
   serverTimestamp,
   setDoc,
   updateDoc,
-  where,
 } from 'firebase/firestore';
+import { Fragment, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button, Card, Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ThemePreferenceContext } from '@/app/_layout';
 import { firebaseAuth, firebaseDb } from '@/config/firebase';
@@ -49,12 +35,14 @@ type UserProfile = {
   dob?: string;
   medicalHistory?: string[];
   gender?: string;
+  bloodGroup?: string;
 };
 
 type MemberFormState = {
   name: string;
   relationship: string;
   gender: string;
+  bloodGroup: string;
   dob: string;
   dobDate: Date | null;
   medicalConditions: string;
@@ -74,6 +62,8 @@ const relationshipOptions = [
 ];
 
 const genderOptions = ['Female', 'Male', 'Non-binary', 'Prefer not to say'];
+const bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const medicalOptions = ['None', 'Diabetes', 'Hypertension', 'Asthma', 'Allergies', 'Heart Conditions'];
 
 const steps = [
   {
@@ -91,14 +81,33 @@ function createEmptyMemberForm(): MemberFormState {
     name: '',
     relationship: '',
     gender: '',
+    bloodGroup: '',
     dob: '',
     dobDate: null,
-    medicalConditions: '',
+    medicalConditions: 'None',
   };
 }
 
 function formatDate(date: Date) {
-  return date.toISOString().split('T')[0];
+  const adjusted = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
+  return adjusted.toISOString().split('T')[0];
+}
+
+function parseDateString(value: string): Date {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, (month ?? 1) - 1, day ?? 1);
+}
+
+function getAgeFromDate(value?: string) {
+  if (!value) return '';
+  const birthDate = parseDateString(value);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age -= 1;
+  }
+  return age;
 }
 
 function generateMemberId() {
@@ -137,12 +146,15 @@ export default function CreateParivarScreen() {
   const [familyNameBusy, setFamilyNameBusy] = useState(false);
   const [familyNameError, setFamilyNameError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [memberModalVisible, setMemberModalVisible] = useState(false);
   const [memberForm, setMemberForm] = useState<MemberFormState>(() => createEmptyMemberForm());
   const [memberSaving, setMemberSaving] = useState(false);
   const [memberDobPickerVisible, setMemberDobPickerVisible] = useState(false);
   const [memberTempDob, setMemberTempDob] = useState<Date>(new Date(1990, 0, 1));
   const [finalizing, setFinalizing] = useState(false);
+  const [showInlineMemberForm, setShowInlineMemberForm] = useState(false);
+  const [selectionPicker, setSelectionPicker] = useState<
+    { type: 'relationship' | 'gender' | 'blood'; tempValue: string }
+  >();
 
   useEffect(() => {
     let isActive = true;
@@ -175,6 +187,7 @@ export default function CreateParivarScreen() {
             medicalHistory: Array.isArray(data.medicalHistory)
               ? (data.medicalHistory as string[])
               : undefined,
+            bloodGroup: typeof data.bloodGroup === 'string' ? data.bloodGroup : undefined,
           });
         }
 
@@ -225,11 +238,11 @@ export default function CreateParivarScreen() {
     };
   }, [user]);
 
-  const ownerMember = useMemo<CreateParivarMemberDraft>(() => {
-    if (!user) {
-      return {
-        id: 'self',
-        name: 'You',
+const ownerMember = useMemo<CreateParivarMemberDraft>(() => {
+  if (!user) {
+    return {
+      id: 'self',
+      name: 'You',
         relationship: 'Self',
       };
     }
@@ -244,6 +257,7 @@ export default function CreateParivarScreen() {
       relationship: 'Self',
       dob: userProfile?.dob,
       gender: userProfile?.gender,
+      bloodGroup: userProfile?.bloodGroup,
       medicalConditions:
         userProfile?.medicalHistory && userProfile.medicalHistory.length > 0
           ? userProfile.medicalHistory
@@ -251,6 +265,31 @@ export default function CreateParivarScreen() {
       userId: user.uid,
     };
   }, [user, userProfile]);
+
+const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
+  members.map((member) => {
+    const payload: Record<string, unknown> = {
+      id: member.id,
+      name: member.name,
+      relationship: member.relationship ?? 'Family',
+    };
+    if (member.gender) {
+      payload.gender = member.gender;
+    }
+    if (member.bloodGroup) {
+      payload.bloodGroup = member.bloodGroup;
+    }
+    if (member.dob) {
+      payload.dob = member.dob;
+    }
+    if (member.medicalConditions && member.medicalConditions.length > 0) {
+      payload.medicalConditions = member.medicalConditions;
+    }
+    if (member.userId) {
+      payload.userId = member.userId;
+    }
+    return payload;
+  });
 
   const ensureOwnerMember = useCallback(
     (incoming: CreateParivarMemberDraft[]) => {
@@ -293,30 +332,36 @@ export default function CreateParivarScreen() {
     try {
       setFamilyNameBusy(true);
       setFamilyNameError(null);
-      const normalized = trimmed.toLowerCase().replace(/\s+/g, '-');
-      const familiesRef = collection(firebaseDb, 'families');
-      const duplicateQuery = query(
-        familiesRef,
-        where('normalizedName', '==', normalized),
-        limit(1)
-      );
-      const duplicateSnapshot = await getDocs(duplicateQuery);
-      if (!duplicateSnapshot.empty) {
+      const normalized = trimmed
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+      if (!normalized) {
+        setFamilyNameError('Choose a name using letters or numbers.');
+        setFamilyNameBusy(false);
+        return;
+      }
+      const familyDocRef = doc(firebaseDb, 'families', normalized);
+      const existingFamilySnapshot = await getDoc(familyDocRef);
+      if (existingFamilySnapshot.exists()) {
         setFamilyNameError(
           'Looks like this Parivar already exists. Try a different name that is uniquely yours.'
         );
+        setFamilyNameBusy(false);
         return;
       }
 
-      const familyRef = doc(familiesRef);
       const initialMembers = [ownerMember];
-      await setDoc(familyRef, {
+      const serializedMembers = sanitizeFamilyMembers(initialMembers);
+      await setDoc(familyDocRef, {
         name: trimmed,
         normalizedName: normalized,
         createdBy: user.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        members: initialMembers,
+        members: serializedMembers,
+        status: 'draft',
       });
 
       const userRef = doc(firebaseDb, 'users', user.uid);
@@ -324,12 +369,12 @@ export default function CreateParivarScreen() {
         userRef,
         {
           latestFamilyDraft: {
-            familyId: familyRef.id,
+            familyId: familyDocRef.id,
             familyName: trimmed,
-            members: initialMembers.map(({ id, name, relationship }) => ({
-              id,
-              name,
-              relationship,
+            members: serializedMembers.map((member) => ({
+              id: member.id as string,
+              name: member.name as string,
+              relationship: member.relationship as string,
             })),
             updatedAt: serverTimestamp(),
           },
@@ -337,12 +382,12 @@ export default function CreateParivarScreen() {
         { merge: true }
       );
 
-      setFamilyId(familyRef.id);
+      setFamilyId(familyDocRef.id);
       setMembers(initialMembers);
       setStep(2);
       await saveCreateParivarProgress({
         step: 2,
-        familyId: familyRef.id,
+        familyId: familyDocRef.id,
         familyName: trimmed,
         members: initialMembers,
       });
@@ -357,16 +402,18 @@ export default function CreateParivarScreen() {
     }
   }, [familyName, ownerMember, user]);
 
-  const openMemberModal = useCallback(() => {
+  const openMemberForm = useCallback(() => {
     setMemberForm(createEmptyMemberForm());
     setMemberTempDob(new Date(1990, 0, 1));
-    setMemberModalVisible(true);
+    setMemberSaving(false);
+    setShowInlineMemberForm(true);
   }, []);
 
-  const closeMemberModal = useCallback(() => {
-    setMemberModalVisible(false);
-    setMemberSaving(false);
+  const cancelMemberForm = useCallback(() => {
     setMemberForm(createEmptyMemberForm());
+    setMemberSaving(false);
+    setShowInlineMemberForm(false);
+    setSelectionPicker(undefined);
   }, []);
 
   const handleSubmitMember = useCallback(async () => {
@@ -380,6 +427,7 @@ export default function CreateParivarScreen() {
 
     const name = memberForm.name.trim();
     const relationship = memberForm.relationship.trim();
+    const bloodGroup = memberForm.bloodGroup.trim();
 
     if (!name) {
       Alert.alert('Almost there', 'Please share the member’s name.');
@@ -403,14 +451,16 @@ export default function CreateParivarScreen() {
         name,
         relationship,
         gender: memberForm.gender || undefined,
+        bloodGroup: bloodGroup || undefined,
         dob: memberForm.dob || undefined,
         medicalConditions: medicalConditions.length ? medicalConditions : undefined,
       };
 
       const nextMembers = ensureOwnerMember([...members, newMember]);
+      const serializedMembers = sanitizeFamilyMembers(nextMembers);
       const familyRef = doc(firebaseDb, 'families', familyId);
       await updateDoc(familyRef, {
-        members: nextMembers,
+        members: serializedMembers,
         updatedAt: serverTimestamp(),
       });
 
@@ -421,10 +471,10 @@ export default function CreateParivarScreen() {
           latestFamilyDraft: {
             familyId,
             familyName,
-            members: nextMembers.map(({ id, name: mName, relationship: rel }) => ({
-              id,
-              name: mName,
-              relationship: rel,
+            members: serializedMembers.map((member) => ({
+              id: member.id as string,
+              name: member.name as string,
+              relationship: member.relationship as string,
             })),
             updatedAt: serverTimestamp(),
           },
@@ -439,7 +489,7 @@ export default function CreateParivarScreen() {
         familyName,
         members: nextMembers,
       });
-      closeMemberModal();
+      cancelMemberForm();
     } catch (error) {
       console.warn('Failed to add family member', error);
       Alert.alert('Unable to add member', 'Please try again in a moment.');
@@ -447,7 +497,7 @@ export default function CreateParivarScreen() {
       setMemberSaving(false);
     }
   }, [
-    closeMemberModal,
+    cancelMemberForm,
     ensureOwnerMember,
     familyId,
     familyName,
@@ -466,6 +516,7 @@ export default function CreateParivarScreen() {
     }
 
     const finalMembers = ensureOwnerMember(members);
+    const serializedMembers = sanitizeFamilyMembers(finalMembers);
     if (!finalMembers.length) {
       Alert.alert('Add a member', 'Add at least one member before finishing.');
       return;
@@ -475,7 +526,7 @@ export default function CreateParivarScreen() {
       setFinalizing(true);
       const familyRef = doc(firebaseDb, 'families', familyId);
       await updateDoc(familyRef, {
-        members: finalMembers,
+        members: serializedMembers,
         memberCount: finalMembers.length,
         status: 'active',
         updatedAt: serverTimestamp(),
@@ -758,10 +809,6 @@ export default function CreateParivarScreen() {
               <YStack gap="$4">
                 {members.map((member) => {
                   const isOwner = member.relationship?.toLowerCase() === 'self';
-                  const medicalList =
-                    Array.isArray(member.medicalConditions) && member.medicalConditions.length > 0
-                      ? member.medicalConditions
-                      : null;
                   return (
                     <Card
                       key={member.id}
@@ -792,46 +839,30 @@ export default function CreateParivarScreen() {
                           </Text>
                           {member.dob && (
                             <Text fontSize={13} color={colors.muted}>
-                              Born on {member.dob}
+                              {getAgeFromDate(member.dob)} years old
                             </Text>
                           )}
                         </YStack>
                       </XStack>
-                      {medicalList && (
-                        <XStack flexWrap="wrap" gap="$2">
-                          {medicalList.map((condition) => (
-                            <Button
-                              key={condition}
-                              size="$2"
-                              backgroundColor={colors.accentSoft}
-                              paddingHorizontal="$3"
-                              paddingVertical="$1"
-                              color={colors.text}
-                            >
-                              <Text fontSize={12} color={colors.text}>
-                                {condition}
-                              </Text>
-                            </Button>
-                          ))}
-                        </XStack>
-                      )}
                     </Card>
                   );
                 })}
               </YStack>
 
-              <Button
-                size="$5"
-                icon={<Plus color={colors.text} size={20} />}
-                backgroundColor={colors.card}
-                shadowColor={colors.shadow}
-                shadowRadius={16}
-                onPress={openMemberModal}
-              >
-                <Text color={colors.text} fontWeight="600">
-                  Add another member
-                </Text>
-              </Button>
+              {showInlineMemberForm ? null : (
+                <Button
+                  size="$5"
+                  icon={<Plus color={colors.text} size={20} />}
+                  backgroundColor={colors.card}
+                  shadowColor={colors.shadow}
+                  shadowRadius={16}
+                  onPress={openMemberForm}
+                >
+                  <Text color={colors.text} fontWeight="600">
+                    Add another member
+                  </Text>
+                </Button>
+              )}
               <YStack gap="$2">
                 <Button
                   size="$5"
@@ -852,24 +883,15 @@ export default function CreateParivarScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <Modal transparent visible={memberModalVisible} animationType="slide">
-        <YStack
-          f={1}
-          bg="rgba(0,0,0,0.45)"
-          padding="$4"
-          jc="center"
-          ai="center"
+      {showInlineMemberForm && (
+        <Card
+          padding="$5"
+          backgroundColor={colors.card}
+          shadowColor={colors.shadow}
+          shadowRadius={18}
+          gap="$4"
         >
-          <Card
-            width="100%"
-            maxWidth={420}
-            padding="$5"
-            gap="$4"
-            borderRadius="$6"
-            backgroundColor={colors.card}
-            shadowColor={colors.shadow}
-            shadowRadius={24}
-          >
+          <YStack gap="$4">
             <YStack gap="$2">
               <Text fontSize={18} fontWeight="700" color={colors.text}>
                 Add a family member
@@ -882,114 +904,161 @@ export default function CreateParivarScreen() {
             <YStack gap="$3">
               <YStack gap="$2">
                 <Text fontWeight="600" color={colors.text}>
-                  Name
+                  First Name
                 </Text>
-              <Input
-                value={memberForm.name}
-                onChangeText={(value) => setMemberForm((prev) => ({ ...prev, name: value }))}
-                placeholder="Full name"
-                size="$4"
-                bg={colors.field}
-                borderColor={colors.border}
-                borderWidth={1}
-                color={colors.text}
-                placeholderTextColor={colors.muted}
-              />
+                <Input
+                  value={memberForm.name}
+                  onChangeText={(value) => setMemberForm((prev) => ({ ...prev, name: value }))}
+                  placeholder="Enter first name"
+                  size="$4"
+                  bg={colors.field}
+                  borderColor={colors.border}
+                  borderWidth={1}
+                  color={colors.text}
+                  placeholderTextColor={colors.muted}
+                />
               </YStack>
 
               <YStack gap="$2">
                 <Text fontWeight="600" color={colors.text}>
                   Relationship with you
                 </Text>
-                <YStack
-                  borderRadius="$5"
-                  borderWidth={1}
-                  borderColor={colors.border}
-                  overflow="hidden"
-                  bg={colors.field}
-                >
-                  <Picker
-                    selectedValue={memberForm.relationship}
-                    onValueChange={(value) =>
-                      setMemberForm((prev) => ({ ...prev, relationship: value }))
-                    }
-                  >
-                    <Picker.Item label="Select relationship" value="" />
-                    {relationshipOptions.map((option) => (
-                      <Picker.Item key={option} label={option} value={option} />
-                    ))}
-                  </Picker>
-                </YStack>
-              </YStack>
-
-              <YStack gap="$2">
-                <Text fontWeight="600" color={colors.text}>
-                  Gender
-                </Text>
-                <YStack
-                  borderRadius="$5"
-                  borderWidth={1}
-                  borderColor={colors.border}
-                  overflow="hidden"
-                  bg={colors.field}
-                >
-                  <Picker
-                    selectedValue={memberForm.gender}
-                    onValueChange={(value) =>
-                      setMemberForm((prev) => ({ ...prev, gender: value }))
-                    }
-                  >
-                    <Picker.Item label="Select gender" value="" />
-                    {genderOptions.map((option) => (
-                      <Picker.Item key={option} label={option} value={option} />
-                    ))}
-                  </Picker>
-                </YStack>
-              </YStack>
-
-              <YStack gap="$2">
-                <Text fontWeight="600" color={colors.text}>
-                  Date of birth
-                </Text>
                 <Button
-                  backgroundColor={colors.card}
+                  size="$4"
+                  backgroundColor={colors.field}
+                  borderColor={colors.border}
+                  borderWidth={1}
                   justifyContent="flex-start"
-                  onPress={() => {
-                    setMemberTempDob(memberForm.dobDate ?? new Date(1990, 0, 1));
-                    setMemberDobPickerVisible(true);
-                  }}
+                  onPress={() =>
+                    setSelectionPicker({ type: 'relationship', tempValue: memberForm.relationship || '' })
+                  }
                 >
-                  <Text color={memberForm.dob ? colors.text : colors.muted}>
-                    {memberForm.dob || 'Select birth date'}
+                  <Text color={memberForm.relationship ? colors.text : colors.muted}>
+                    {memberForm.relationship || 'Select relationship'}
                   </Text>
                 </Button>
               </YStack>
 
               <YStack gap="$2">
                 <Text fontWeight="600" color={colors.text}>
-                  Medical conditions
+                  Gender
                 </Text>
-                <TextArea
-                  value={memberForm.medicalConditions}
-                  onChangeText={(value) =>
-                    setMemberForm((prev) => ({ ...prev, medicalConditions: value }))
-                  }
-                  placeholder="Optional. Separate multiple conditions with commas."
-                  rows={3}
-                  bg={colors.field}
+                <Button
+                  size="$4"
+                  backgroundColor={colors.field}
                   borderColor={colors.border}
-                  color={colors.text}
-                  placeholderTextColor={colors.muted}
-                />
+                  borderWidth={1}
+                  justifyContent="flex-start"
+                  onPress={() =>
+                    setSelectionPicker({ type: 'gender', tempValue: memberForm.gender || '' })
+                  }
+                >
+                  <Text color={memberForm.gender ? colors.text : colors.muted}>
+                    {memberForm.gender || 'Select gender'}
+                  </Text>
+                </Button>
               </YStack>
+
+              <YStack gap="$2">
+                <Text fontWeight="600" color={colors.text}>
+                  Blood group
+                </Text>
+                <Button
+                  size="$4"
+                  backgroundColor={colors.field}
+                  borderColor={colors.border}
+                  borderWidth={1}
+                  justifyContent="flex-start"
+                  onPress={() =>
+                    setSelectionPicker({ type: 'blood', tempValue: memberForm.bloodGroup || '' })
+                  }
+                >
+                  <Text color={memberForm.bloodGroup ? colors.text : colors.muted}>
+                    {memberForm.bloodGroup || 'Select blood group'}
+                  </Text>
+                </Button>
+              </YStack>
+
+              <YStack gap="$2">
+                <Text fontWeight="600" color={colors.text}>
+                  Date of birth
+                </Text>
+          <Button
+            size="$4"
+            backgroundColor={colors.field}
+            borderColor={colors.border}
+            borderWidth={1}
+            justifyContent="flex-start"
+            onPress={() => {
+              const existing = memberForm.dob ? parseDateString(memberForm.dob) : undefined;
+              setMemberTempDob(existing ?? new Date(1990, 0, 1));
+              setMemberDobPickerVisible(true);
+            }}
+          >
+                  <Text color={memberForm.dob ? colors.text : colors.muted}>
+                    {memberForm.dob || 'Select birth date'}
+                  </Text>
+                </Button>
+              </YStack>
+
+            <YStack gap="$2">
+              <Text fontWeight="600" color={colors.text}>
+                Medical conditions
+              </Text>
+              <XStack flexWrap="wrap" gap="$2">
+                {medicalOptions.map((option) => {
+                  const selections = memberForm.medicalConditions
+                    .split(',')
+                    .map((value) => value.trim())
+                    .filter(Boolean);
+                  const active = selections.includes(option);
+                  return (
+                    <Button
+                      key={option}
+                      size="$2"
+                      paddingHorizontal="$3"
+                      paddingVertical="$1"
+                      borderRadius="$4"
+                      variant={active ? 'accent' : 'outlined'}
+                      onPress={() => {
+                        setMemberForm((prev) => {
+                          const current = prev.medicalConditions
+                            .split(',')
+                            .map((value) => value.trim())
+                            .filter(Boolean);
+
+                          let next: string[];
+                          if (option === 'None') {
+                            next = current.includes('None') ? [] : ['None'];
+                          } else {
+                            next = current.filter((value) => value !== 'None');
+                            if (current.includes(option)) {
+                              next = next.filter((value) => value !== option);
+                            } else {
+                              next.push(option);
+                            }
+                            if (next.length === 0) {
+                              next = ['None'];
+                            }
+                          }
+
+                          return {
+                            ...prev,
+                            medicalConditions: next.join(', '),
+                          };
+                        });
+                      }}
+                    >
+                      <Text fontSize={12}>{option}</Text>
+                    </Button>
+                  );
+                })}
+              </XStack>
+            </YStack>
             </YStack>
 
             <XStack gap="$3">
-              <Button
-                flex={1}
-                backgroundColor={colors.card}
-                onPress={closeMemberModal}
-              >
+              <Button flex={1} backgroundColor={colors.card} onPress={cancelMemberForm}>
                 <Text color={colors.text} fontWeight="600">
                   Cancel
                 </Text>
@@ -1005,9 +1074,93 @@ export default function CreateParivarScreen() {
                 </Text>
               </Button>
             </XStack>
-          </Card>
-        </YStack>
-      </Modal>
+          </YStack>
+        </Card>
+      )}
+
+      {selectionPicker && (
+        <Modal transparent visible animationType="fade">
+          <YStack f={1} bg="rgba(0,0,0,0.45)" padding="$4" jc="center" ai="center">
+            <View
+              style={{
+                backgroundColor: colors.card,
+                borderRadius: 16,
+                width: '100%',
+                maxWidth: 360,
+                overflow: 'hidden',
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <Picker
+                selectedValue={selectionPicker.tempValue}
+                onValueChange={(value) =>
+                  setSelectionPicker((prev) => (prev ? { ...prev, tempValue: value } : prev))
+                }
+                dropdownIconColor={colors.text}
+                style={{ color: colors.text, backgroundColor: colors.field }}
+                itemStyle={{ color: colors.text, fontSize: 16 }}
+              >
+                <Picker.Item
+                  label={
+                    selectionPicker.type === 'relationship'
+                      ? 'Select relationship'
+                      : selectionPicker.type === 'gender'
+                        ? 'Select gender'
+                        : 'Select blood group'
+                  }
+                  value=""
+                />
+                {(selectionPicker.type === 'relationship'
+                  ? relationshipOptions
+                  : selectionPicker.type === 'gender'
+                    ? genderOptions
+                    : bloodGroupOptions
+                ).map((option) => (
+                  <Picker.Item key={option} label={option} value={option} />
+                ))}
+              </Picker>
+              <XStack gap="$3" padding="$3" backgroundColor={colors.card}>
+                <Button
+                  flex={1}
+                  backgroundColor={colors.card}
+                  onPress={() => setSelectionPicker(undefined)}
+                >
+                  <Text color={colors.text} fontWeight="600">
+                    Cancel
+                  </Text>
+                </Button>
+                <Button
+                  flex={1}
+                  backgroundColor={colors.accent}
+                  onPress={() => {
+                    setMemberForm((prev) => ({
+                      ...prev,
+                      relationship:
+                        selectionPicker.type === 'relationship'
+                          ? selectionPicker.tempValue
+                          : prev.relationship,
+                      gender:
+                        selectionPicker.type === 'gender'
+                          ? selectionPicker.tempValue
+                          : prev.gender,
+                      bloodGroup:
+                        selectionPicker.type === 'blood'
+                          ? selectionPicker.tempValue
+                          : prev.bloodGroup,
+                    }));
+                    setSelectionPicker(undefined);
+                  }}
+                >
+                  <Text color={palette.accentForeground} fontWeight="600">
+                    Done
+                  </Text>
+                </Button>
+              </XStack>
+            </View>
+          </YStack>
+        </Modal>
+      )}
 
       <Modal transparent visible={memberDobPickerVisible} animationType="fade">
         <YStack f={1} bg="rgba(0,0,0,0.45)" jc="center" ai="center" padding="$4">
@@ -1034,6 +1187,7 @@ export default function CreateParivarScreen() {
                 }
               }}
               maximumDate={new Date()}
+              textColor={colors.text}
             />
             <XStack gap="$3">
               <Button
