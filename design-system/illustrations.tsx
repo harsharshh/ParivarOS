@@ -17,6 +17,7 @@ import { withAlpha } from '@/utils/color';
 export type IllustrationProps = {
   width?: number;
   height?: number;
+  mode?: 'light' | 'dark';
 };
 
 const baseWidth = 320;
@@ -36,14 +37,16 @@ const createDimensions = (width?: number, height?: number) => {
 export const FamilyTreeIllustration = memo(function FamilyTreeIllustration({
   width,
   height,
+  mode,
 }: IllustrationProps) {
-  const colorScheme = useColorScheme() ?? 'light';
+  const systemScheme = useColorScheme() ?? 'light';
+  const colorScheme = mode ?? systemScheme;
   const colors = BrandColors[colorScheme];
   const accentSpectrum = accentPalette[colorScheme];
   const dims = createDimensions(width, height);
   const branchHighlightStart = withAlpha(colors.accentForeground, 0.92);
   const branchHighlightEnd = withAlpha(colors.accentForeground, 0.64);
-  const frameFill = withAlpha(accentSpectrum[2], colorScheme === 'dark' ? 0.18 : 0.12);
+  const frameFill = withAlpha(accentSpectrum[colorScheme === 'dark' ? 3 : 1], colorScheme === 'dark' ? 0.28 : 0.16);
   const trunkGlow = withAlpha(colors.accentForeground, 0.82);
 
   return (

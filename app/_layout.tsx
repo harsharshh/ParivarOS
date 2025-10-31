@@ -159,6 +159,7 @@ export default function RootLayout() {
                     options={{ headerShown: false }}
                     initialParams={stackInitialParams}
                   />
+                  <Stack.Screen name="create-parivar/index" options={{ headerShown: false }} />
                   <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
                 </Stack>
                     <StatusBar style="auto" />

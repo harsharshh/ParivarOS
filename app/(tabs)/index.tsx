@@ -4,6 +4,7 @@ import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, Card, Spinner, Text, XStack, YStack } from 'tamagui';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { ThemePreferenceContext } from '@/app/_layout';
 import { firebaseAuth } from '@/config/firebase';
@@ -11,12 +12,33 @@ import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constan
 import { BrandSpacing, BrandTypography, ModuleCard, ParivarCtaCard, StatsCard } from '@/design-system';
 import { withAlpha } from '@/utils/color';
 import { useParivarStatus } from '@/hooks/use-parivar-status';
+import { getCreateParivarProgress } from '@/utils/create-parivar-storage';
 
 const summaryCardDefinitions = [
-  { title: 'Parivar Members', value: '12', description: 'Loved ones connected' },
-  { title: 'Parivar Linked', value: '3', description: 'Families you follow' },
-  { title: 'Events', value: '5', description: 'Joyful moments ahead' },
-  { title: 'Health Reminders', value: '2', description: 'Care tasks scheduled' },
+  {
+    title: 'Parivar Members',
+    value: '12',
+    description: 'Loved ones connected',
+    href: '/quick-stats/parivar-members',
+  },
+  {
+    title: 'Parivar Linked',
+    value: '3',
+    description: 'Families you follow',
+    href: '/quick-stats/parivar-linked',
+  },
+  {
+    title: 'Events',
+    value: '5',
+    description: 'Joyful moments ahead',
+    href: '/quick-stats/events',
+  },
+  {
+    title: 'Health Reminders',
+    value: '2',
+    description: 'Care tasks scheduled',
+    href: '/quick-stats/health-reminders',
+  },
 ];
 
 const familyModules = [
@@ -165,6 +187,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const { profileName, hasCreatedParivar, hasJoinedParivar, refreshStatus } = useParivarStatus();
+  const [hasCreateParivarProgress, setHasCreateParivarProgress] = useState(false);
 
   const ensureParivarCreated = useCallback(() => {
     Alert.alert(
@@ -173,13 +196,16 @@ export default function HomeScreen() {
     );
   }, []);
 
-  const handleSummaryPress = useCallback((title: string) => {
-    if (!hasJoinedParivar) {
-      ensureParivarCreated();
-      return;
-    }
-    Alert.alert(title, 'Detailed insights are coming soon.');
-  }, [ensureParivarCreated, hasJoinedParivar]);
+  const handleQuickStatPress = useCallback(
+    (href: string) => {
+      if (!hasJoinedParivar) {
+        ensureParivarCreated();
+        return;
+      }
+      router.push(href);
+    },
+    [ensureParivarCreated, hasJoinedParivar, router]
+  );
 
   const handleModulePress = useCallback((title: string) => {
     if (!hasJoinedParivar) {
@@ -190,8 +216,8 @@ export default function HomeScreen() {
   }, [ensureParivarCreated, hasJoinedParivar]);
 
   const handleCreateParivar = useCallback(() => {
-    Alert.alert('Create Parivar', 'Launching Parivar creation flow soon.');
-  }, []);
+    router.push('/create-parivar');
+  }, [router]);
 
   const handleJoinParivar = useCallback(() => {
     Alert.alert('Join Parivar', 'Joining flow coming soon.');
@@ -226,6 +252,21 @@ export default function HomeScreen() {
     }
   }, [refreshStatus]);
 
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      (async () => {
+        const progress = await getCreateParivarProgress();
+        if (isActive) {
+          setHasCreateParivarProgress(Boolean(progress));
+        }
+      })();
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
+
   const firstName = useMemo(() => {
     if (!profileName) return 'Parivar Friend';
     const [first] = profileName.split(' ');
@@ -242,12 +283,13 @@ export default function HomeScreen() {
     () =>
       summaryCardDefinitions.map((definition) => ({
         ...definition,
-        onPress: () => handleSummaryPress(definition.title),
+        onPress: () => handleQuickStatPress(definition.href),
       })),
-    [handleSummaryPress]
+    [handleQuickStatPress]
   );
   const showCreateCTA = !hasCreatedParivar && !hasJoinedParivar;
   const showJoinCTA = hasCreatedParivar && !hasJoinedParivar;
+  const createButtonLabel = hasCreateParivarProgress ? 'Continue creating Parivar' : 'Create Parivar';
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -348,7 +390,7 @@ export default function HomeScreen() {
             themeName={themeName}
             title="You haven't created a Parivar yet."
             description="Start by creating your Parivar to add members, stories, and rituals in one joyful place."
-            buttonLabel="Create Parivar"
+            buttonLabel={createButtonLabel}
             onPress={handleCreateParivar}
             backgroundColor={colors.card}
             borderColor={colors.border}
