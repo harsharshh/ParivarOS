@@ -113,7 +113,7 @@ export default function CreateParivarScreen() {
   const colors = useMemo(() => {
     const accentSoft = withAlpha(palette.accent, themeName === 'dark' ? 0.3 : 0.16);
     return {
-      background: palette.background,
+      background: palette.surface,
       card: palette.surface,
       accent: palette.accent,
       accentSoft,

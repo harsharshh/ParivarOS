@@ -99,7 +99,7 @@ export default function ExploreScreen() {
 
   const colors = useMemo(
     () => ({
-      background: palette.background,
+      background: palette.surface,
       card: palette.surface,
       text: palette.text,
       accent: palette.accent,
@@ -164,7 +164,7 @@ export default function ExploreScreen() {
       >
         <YStack paddingTop={insets.top + BrandSpacing.elementGap / 2} paddingHorizontal={BrandSpacing.gutter} paddingBottom={BrandSpacing.elementGap / 2}>
           <XStack
-            backgroundColor={colors.headerBackground}
+            backgroundColor={colors.background}
             borderRadius={20}
             paddingHorizontal={BrandSpacing.elementGap}
             paddingVertical={BrandSpacing.elementGap / 1.5}

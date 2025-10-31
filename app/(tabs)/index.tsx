@@ -225,7 +225,7 @@ export default function HomeScreen() {
   const colors = useMemo(() => {
     const accentSpectrum = accentPalette[themeName];
     return {
-      background: palette.background,
+      background: palette.surface,
       card: palette.surface,
       accent: palette.accent,
       accentStrong: palette.accentStrong,
@@ -307,7 +307,7 @@ export default function HomeScreen() {
       >
         <YStack paddingTop={headerPaddingTop} paddingHorizontal={BrandSpacing.gutter} paddingBottom={BrandSpacing.elementGap / 2}>
           <XStack
-            backgroundColor={colors.headerBackground}
+            backgroundColor={colors.background}
             borderRadius={20}
             paddingHorizontal={BrandSpacing.elementGap}
             paddingVertical={BrandSpacing.elementGap / 1.5}

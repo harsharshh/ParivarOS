@@ -21,7 +21,7 @@ export default function AvatarScreen() {
   const colors = useMemo(() => {
     const accentSpectrum = accentPalette[themeName];
     return {
-      background: palette.background,
+      background: palette.surface,
       card: palette.surface,
       surface: palette.surfaceMuted,
       divider: palette.border,

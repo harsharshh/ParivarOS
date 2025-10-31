@@ -229,7 +229,7 @@ export default function QuickStatDetailScreen() {
 
   const colors = useMemo(
     () => ({
-      background: palette.background,
+      background: palette.surface,
       text: palette.text,
       secondary: palette.subtleText,
       muted: palette.mutedText,
