@@ -1,15 +1,20 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import { ArrowLeft, Check, Plus, UserRound } from '@tamagui/lucide-icons';
+import { ArrowLeft, Check, Edit3, Plus, Trash2, UserRound } from '@tamagui/lucide-icons';
 import { useRouter } from 'expo-router';
 import {
   arrayUnion,
+  collection,
   deleteField,
   doc,
   getDoc,
+  getDocs,
+  limit,
+  query,
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
 } from 'firebase/firestore';
 import { Fragment, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, View } from 'react-native';
@@ -64,6 +69,7 @@ const relationshipOptions = [
 const genderOptions = ['Female', 'Male', 'Non-binary', 'Prefer not to say'];
 const bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const medicalOptions = ['None', 'Diabetes', 'Hypertension', 'Asthma', 'Allergies', 'Heart Conditions'];
+const defaultMedicalSelections = medicalOptions[0];
 
 const steps = [
   {
@@ -84,7 +90,7 @@ function createEmptyMemberForm(): MemberFormState {
     bloodGroup: '',
     dob: '',
     dobDate: null,
-    medicalConditions: 'None',
+    medicalConditions: defaultMedicalSelections,
   };
 }
 
@@ -152,6 +158,9 @@ export default function CreateParivarScreen() {
   const [memberTempDob, setMemberTempDob] = useState<Date>(new Date(1990, 0, 1));
   const [finalizing, setFinalizing] = useState(false);
   const [showInlineMemberForm, setShowInlineMemberForm] = useState(false);
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [isEditingFamilyName, setIsEditingFamilyName] = useState(false);
+  const [familyNameDraft, setFamilyNameDraft] = useState('');
   const [selectionPicker, setSelectionPicker] = useState<
     { type: 'relationship' | 'gender' | 'blood'; tempValue: string }
   >();
@@ -238,11 +247,11 @@ export default function CreateParivarScreen() {
     };
   }, [user]);
 
-const ownerMember = useMemo<CreateParivarMemberDraft>(() => {
-  if (!user) {
-    return {
-      id: 'self',
-      name: 'You',
+  const ownerMember = useMemo<CreateParivarMemberDraft>(() => {
+    if (!user) {
+      return {
+        id: 'self',
+        name: 'You',
         relationship: 'Self',
       };
     }
@@ -266,37 +275,50 @@ const ownerMember = useMemo<CreateParivarMemberDraft>(() => {
     };
   }, [user, userProfile]);
 
-const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
-  members.map((member) => {
-    const payload: Record<string, unknown> = {
-      id: member.id,
-      name: member.name,
-      relationship: member.relationship ?? 'Family',
-    };
-    if (member.gender) {
-      payload.gender = member.gender;
-    }
-    if (member.bloodGroup) {
-      payload.bloodGroup = member.bloodGroup;
-    }
-    if (member.dob) {
-      payload.dob = member.dob;
-    }
-    if (member.medicalConditions && member.medicalConditions.length > 0) {
-      payload.medicalConditions = member.medicalConditions;
-    }
-    if (member.userId) {
-      payload.userId = member.userId;
-    }
-    return payload;
-  });
+  const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
+    members.map((member) => {
+      const payload: Record<string, unknown> = {
+        id: member.id,
+        name: member.name,
+        relationship: member.relationship ?? 'Family',
+      };
+      if (member.gender) {
+        payload.gender = member.gender;
+      }
+      if (member.bloodGroup) {
+        payload.bloodGroup = member.bloodGroup;
+      }
+      if (member.dob) {
+        payload.dob = member.dob;
+      }
+
+      const normalizedMedical =
+        Array.isArray(member.medicalConditions)
+          ? member.medicalConditions.filter((value) => !!value)
+          : typeof member.medicalConditions === 'string'
+            ? member.medicalConditions
+                .split(',')
+                .map((value) => value.trim())
+                .filter((value) => value.length > 0)
+            : undefined;
+      if (normalizedMedical && normalizedMedical.length > 0) {
+        payload.medicalConditions = normalizedMedical;
+      }
+
+      if (member.userId) {
+        payload.userId = member.userId;
+      }
+      return payload;
+    });
 
   const ensureOwnerMember = useCallback(
     (incoming: CreateParivarMemberDraft[]) => {
       if (!incoming.length) {
         return [ownerMember];
       }
-      const hasOwner = incoming.some((member) => member.id === ownerMember.id || member.userId === ownerMember.userId);
+      const hasOwner = incoming.some(
+        (member) => member.id === ownerMember.id || member.userId === ownerMember.userId
+      );
       if (hasOwner) {
         return incoming;
       }
@@ -323,7 +345,9 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
       );
       return;
     }
-    const trimmed = familyName.trim();
+
+    const rawValue = familyId && isEditingFamilyName ? familyNameDraft : familyName;
+    const trimmed = rawValue.trim();
     if (!trimmed) {
       setFamilyNameError('Give your Parivar a joyful name.');
       return;
@@ -342,55 +366,106 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
         setFamilyNameBusy(false);
         return;
       }
-      const familyDocRef = doc(firebaseDb, 'families', normalized);
-      const existingFamilySnapshot = await getDoc(familyDocRef);
-      if (existingFamilySnapshot.exists()) {
-        setFamilyNameError(
-          'Looks like this Parivar already exists. Try a different name that is uniquely yours.'
-        );
-        setFamilyNameBusy(false);
-        return;
-      }
 
-      const initialMembers = [ownerMember];
-      const serializedMembers = sanitizeFamilyMembers(initialMembers);
-      await setDoc(familyDocRef, {
-        name: trimmed,
-        normalizedName: normalized,
-        createdBy: user.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        members: serializedMembers,
-        status: 'draft',
-      });
-
-      const userRef = doc(firebaseDb, 'users', user.uid);
-      await setDoc(
-        userRef,
-        {
-          latestFamilyDraft: {
-            familyId: familyDocRef.id,
-            familyName: trimmed,
-            members: serializedMembers.map((member) => ({
-              id: member.id as string,
-              name: member.name as string,
-              relationship: member.relationship as string,
-            })),
-            updatedAt: serverTimestamp(),
-          },
-        },
-        { merge: true }
+      const familiesRef = collection(firebaseDb, 'families');
+      const duplicateQuery = query(
+        familiesRef,
+        where('normalizedName', '==', normalized),
+        limit(1)
       );
+      const duplicateSnapshot = await getDocs(duplicateQuery);
+      const duplicateDocId = duplicateSnapshot.empty ? undefined : duplicateSnapshot.docs[0].id;
 
-      setFamilyId(familyDocRef.id);
-      setMembers(initialMembers);
-      setStep(2);
-      await saveCreateParivarProgress({
-        step: 2,
-        familyId: familyDocRef.id,
-        familyName: trimmed,
-        members: initialMembers,
-      });
+      if (familyId) {
+        if (duplicateDocId && duplicateDocId !== familyId) {
+          setFamilyNameError(
+            'Looks like this Parivar already exists. Try a different name that is uniquely yours.'
+          );
+          setFamilyNameBusy(false);
+          return;
+        }
+
+        const familyRef = doc(firebaseDb, 'families', familyId);
+        await updateDoc(familyRef, {
+          name: trimmed,
+          normalizedName: normalized,
+          updatedAt: serverTimestamp(),
+        });
+
+        const userRef = doc(firebaseDb, 'users', user.uid);
+        await setDoc(
+          userRef,
+          {
+            latestFamilyDraft: {
+              familyId,
+              familyName: trimmed,
+              updatedAt: serverTimestamp(),
+            },
+          },
+          { merge: true }
+        );
+
+        setFamilyName(trimmed);
+        setIsEditingFamilyName(false);
+        setFamilyNameDraft('');
+
+        await saveCreateParivarProgress({
+          step: 2,
+          familyId,
+          familyName: trimmed,
+          members,
+        });
+      } else {
+        if (duplicateDocId) {
+          setFamilyNameError(
+            'Looks like this Parivar already exists. Try a different name that is uniquely yours.'
+          );
+          setFamilyNameBusy(false);
+          return;
+        }
+
+        const familyDocRef = doc(firebaseDb, 'families', normalized);
+        const initialMembers = [ownerMember];
+        const serializedMembers = sanitizeFamilyMembers(initialMembers);
+        await setDoc(familyDocRef, {
+          name: trimmed,
+          normalizedName: normalized,
+          createdBy: user.uid,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          members: serializedMembers,
+          status: 'draft',
+        });
+
+        const userRef = doc(firebaseDb, 'users', user.uid);
+        await setDoc(
+          userRef,
+          {
+            latestFamilyDraft: {
+              familyId: familyDocRef.id,
+              familyName: trimmed,
+              members: serializedMembers.map((member) => ({
+                id: member.id as string,
+                name: member.name as string,
+                relationship: member.relationship as string,
+              })),
+              updatedAt: serverTimestamp(),
+            },
+          },
+          { merge: true }
+        );
+
+        setFamilyId(familyDocRef.id);
+        setFamilyName(trimmed);
+        setMembers(initialMembers);
+        setStep(2);
+        await saveCreateParivarProgress({
+          step: 2,
+          familyId: familyDocRef.id,
+          familyName: trimmed,
+          members: initialMembers,
+        });
+      }
     } catch (error) {
       console.warn('Failed to create Parivar', error);
       Alert.alert(
@@ -400,20 +475,60 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
     } finally {
       setFamilyNameBusy(false);
     }
-  }, [familyName, ownerMember, user]);
+  }, [familyId, familyName, familyNameDraft, isEditingFamilyName, members, ownerMember, user]);
 
-  const openMemberForm = useCallback(() => {
+  const openNewMemberForm = useCallback(() => {
     setMemberForm(createEmptyMemberForm());
     setMemberTempDob(new Date(1990, 0, 1));
     setMemberSaving(false);
+    setEditingMemberId(null);
     setShowInlineMemberForm(true);
   }, []);
+
+  const openEditMemberForm = useCallback(
+    (memberId: string) => {
+      const existing = members.find((member) => member.id === memberId);
+      if (!existing) return;
+
+      setMemberForm({
+        name: existing.name ?? '',
+        relationship: existing.relationship ?? '',
+        gender: existing.gender ?? '',
+        bloodGroup: existing.bloodGroup ?? '',
+        dob: existing.dob ?? '',
+        dobDate: existing.dob ? parseDateString(existing.dob) : null,
+        medicalConditions: Array.isArray(existing.medicalConditions)
+          ? existing.medicalConditions.join(', ')
+          : existing.medicalConditions
+            ? String(existing.medicalConditions)
+            : defaultMedicalSelections,
+      });
+      setMemberTempDob(existing.dob ? parseDateString(existing.dob) : new Date(1990, 0, 1));
+      setMemberSaving(false);
+      setEditingMemberId(memberId);
+      setShowInlineMemberForm(true);
+    },
+    [members]
+  );
 
   const cancelMemberForm = useCallback(() => {
     setMemberForm(createEmptyMemberForm());
     setMemberSaving(false);
     setShowInlineMemberForm(false);
     setSelectionPicker(undefined);
+    setEditingMemberId(null);
+  }, []);
+
+  const startEditingFamilyName = useCallback(() => {
+    setFamilyNameDraft(familyName);
+    setIsEditingFamilyName(true);
+    setFamilyNameError(null);
+  }, [familyName]);
+
+  const cancelEditingFamilyName = useCallback(() => {
+    setFamilyNameDraft('');
+    setIsEditingFamilyName(false);
+    setFamilyNameError(null);
   }, []);
 
   const handleSubmitMember = useCallback(async () => {
@@ -446,8 +561,8 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
         .map((value) => value.trim())
         .filter(Boolean);
 
-      const newMember: CreateParivarMemberDraft = {
-        id: generateMemberId(),
+      const hydratedMember: CreateParivarMemberDraft = {
+        id: editingMemberId ?? generateMemberId(),
         name,
         relationship,
         gender: memberForm.gender || undefined,
@@ -456,7 +571,11 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
         medicalConditions: medicalConditions.length ? medicalConditions : undefined,
       };
 
-      const nextMembers = ensureOwnerMember([...members, newMember]);
+      const memberCollection = editingMemberId
+        ? members.map((member) => (member.id === editingMemberId ? hydratedMember : member))
+        : [...members, hydratedMember];
+
+      const nextMembers = ensureOwnerMember(memberCollection);
       const serializedMembers = sanitizeFamilyMembers(nextMembers);
       const familyRef = doc(firebaseDb, 'families', familyId);
       await updateDoc(familyRef, {
@@ -503,8 +622,78 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
     familyName,
     memberForm,
     members,
+    editingMemberId,
     user,
   ]);
+
+  const handleDeleteMember = useCallback(
+    async (memberId: string) => {
+      if (!firebaseDb || !user || !familyId) {
+        Alert.alert(
+          'Unable to remove member',
+          'Please ensure you are online and signed in.'
+        );
+        return;
+      }
+
+      const target = members.find((member) => member.id === memberId);
+      if (!target) {
+        return;
+      }
+
+      if (target.relationship?.toLowerCase() === 'self') {
+        Alert.alert('Cannot remove member', 'You cannot remove yourself from the Parivar.');
+        return;
+      }
+
+      try {
+        setMemberSaving(true);
+        const remaining = members.filter((member) => member.id !== memberId);
+        const nextMembers = ensureOwnerMember(remaining);
+        const serializedMembers = sanitizeFamilyMembers(nextMembers);
+
+        const familyRef = doc(firebaseDb, 'families', familyId);
+        await updateDoc(familyRef, {
+          members: serializedMembers,
+          updatedAt: serverTimestamp(),
+        });
+
+        const userRef = doc(firebaseDb, 'users', user.uid);
+        await setDoc(
+          userRef,
+          {
+            latestFamilyDraft: {
+              familyId,
+              familyName,
+              members: serializedMembers.map((member) => ({
+                id: member.id as string,
+                name: member.name as string,
+                relationship: member.relationship as string,
+              })),
+              updatedAt: serverTimestamp(),
+            },
+          },
+          { merge: true }
+        );
+
+        setMembers(nextMembers);
+        await saveCreateParivarProgress({
+          step: 2,
+          familyId,
+          familyName,
+          members: nextMembers,
+        });
+
+        if (editingMemberId === memberId) {
+          cancelMemberForm();
+        }
+      } catch (error) {
+        console.warn('Failed to delete member', error);
+        Alert.alert('Unable to remove member', 'Please try again in a moment.');
+      } finally {
+        setMemberSaving(false);
+      }
+    }, [cancelMemberForm, editingMemberId, ensureOwnerMember, familyId, familyName, members, user]);
 
   const handleFinalize = useCallback(async () => {
     if (!firebaseDb || !user || !familyId) {
@@ -797,13 +986,63 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
             </Card>
           ) : (
             <YStack gap="$5">
-              <Card padding="$4" gap="$2" backgroundColor={colors.card} shadowColor={colors.shadow} shadowRadius={16}>
-                <Text fontSize={16} fontWeight="700" color={colors.text}>
-                  {familyName}
-                </Text>
-                <Text color={colors.muted}>
-                  Add members to start weaving memories together.
-                </Text>
+              <Card padding="$4" gap="$3" backgroundColor={colors.card} shadowColor={colors.shadow} shadowRadius={16}>
+                {isEditingFamilyName ? (
+                  <YStack gap="$3">
+                    <Input
+                      value={familyNameDraft}
+                      onChangeText={setFamilyNameDraft}
+                      placeholder="Enter family name"
+                      size="$4"
+                      bg={colors.field}
+                      borderColor={familyNameError ? palette.danger : colors.border}
+                      borderWidth={1}
+                      color={colors.text}
+                      placeholderTextColor={colors.muted}
+                    />
+                    {familyNameError ? (
+                      <Text color={palette.danger} fontSize={13}>
+                        {familyNameError}
+                      </Text>
+                    ) : null}
+                    <XStack gap="$2">
+                      <Button flex={1} backgroundColor={colors.card} onPress={cancelEditingFamilyName}>
+                        <Text color={colors.text} fontWeight="600">
+                          Cancel
+                        </Text>
+                      </Button>
+                      <Button
+                        flex={1}
+                        backgroundColor={colors.accent}
+                        onPress={handleSaveFamilyName}
+                        disabled={familyNameBusy}
+                      >
+                        <Text color={palette.accentForeground} fontWeight="600">
+                          {familyNameBusy ? 'Saving...' : 'Save name'}
+                        </Text>
+                      </Button>
+                    </XStack>
+                  </YStack>
+                ) : (
+                  <XStack ai="center" jc="space-between">
+                    <YStack>
+                      <Text fontSize={16} fontWeight="700" color={colors.text}>
+                        {familyName}
+                      </Text>
+                      <Text color={colors.muted}>
+                        Add members for memories together.
+                      </Text>
+                    </YStack>
+                    <Button
+                      size="$2"
+                      circular
+                      backgroundColor={colors.field}
+                      onPress={startEditingFamilyName}
+                    >
+                      <Edit3 size={16} color={colors.text} />
+                    </Button>
+                  </XStack>
+                )}
               </Card>
 
               <YStack gap="$4">
@@ -818,31 +1057,53 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
                       shadowColor={colors.shadow}
                       shadowRadius={isOwner ? 18 : 12}
                     >
-                      <XStack ai="center" gap="$3">
-                        <YStack
-                          width={44}
-                          height={44}
-                          borderRadius={22}
-                          ai="center"
-                          jc="center"
-                          backgroundColor={colors.avatar}
-                        >
-                          <UserRound size={22} color={colors.accent} />
-                        </YStack>
-                        <YStack flex={1} gap="$1">
-                          <Text fontSize={16} fontWeight="700" color={colors.text}>
-                            {member.name}
-                          </Text>
-                          <Text fontSize={13} color={colors.muted}>
-                            {member.relationship || 'Family'}
-                            {isOwner ? ' • You' : ''}
-                          </Text>
-                          {member.dob && (
-                            <Text fontSize={13} color={colors.muted}>
-                              {getAgeFromDate(member.dob)} years old
+                      <XStack ai="center" gap="$3" jc="space-between">
+                        <XStack ai="center" gap="$3">
+                          <YStack
+                            width={44}
+                            height={44}
+                            borderRadius={22}
+                            ai="center"
+                            jc="center"
+                            backgroundColor={colors.avatar}
+                          >
+                            <UserRound size={22} color={colors.accent} />
+                          </YStack>
+                          <YStack gap="$1">
+                            <Text fontSize={16} fontWeight="700" color={colors.text}>
+                              {member.name}
                             </Text>
-                          )}
-                        </YStack>
+                            <Text fontSize={13} color={colors.muted}>
+                              {member.relationship || 'Family'}
+                              {isOwner ? ' • You' : ''}
+                            </Text>
+                            {member.dob && (
+                              <Text fontSize={13} color={colors.muted}>
+                                {getAgeFromDate(member.dob)} years old
+                              </Text>
+                            )}
+                          </YStack>
+                        </XStack>
+                        {!isOwner && (
+                          <XStack gap="$2">
+                            <Button
+                              size="$2"
+                              circular
+                              backgroundColor={colors.field}
+                              onPress={() => openEditMemberForm(member.id)}
+                            >
+                              <Edit3 size={16} color={colors.text} />
+                            </Button>
+                            <Button
+                              size="$2"
+                              circular
+                              backgroundColor={colors.field}
+                              onPress={() => handleDeleteMember(member.id)}
+                            >
+                              <Trash2 size={16} color={colors.text} />
+                            </Button>
+                          </XStack>
+                        )}
                       </XStack>
                     </Card>
                   );
@@ -856,7 +1117,7 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
                   backgroundColor={colors.card}
                   shadowColor={colors.shadow}
                   shadowRadius={16}
-                  onPress={openMemberForm}
+                  onPress={openNewMemberForm}
                 >
                   <Text color={colors.text} fontWeight="600">
                     Add another member
@@ -894,7 +1155,7 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
           <YStack gap="$4">
             <YStack gap="$2">
               <Text fontSize={18} fontWeight="700" color={colors.text}>
-                Add a family member
+                {editingMemberId ? 'Edit family member' : 'Add a family member'}
               </Text>
               <Text color={colors.muted} fontSize={13}>
                 Save each member and we&apos;ll keep everything synced.
@@ -904,7 +1165,7 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
             <YStack gap="$3">
               <YStack gap="$2">
                 <Text fontWeight="600" color={colors.text}>
-                  First Name
+                  Name
                 </Text>
                 <Input
                   value={memberForm.name}
@@ -983,21 +1244,19 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
                 <Text fontWeight="600" color={colors.text}>
                   Date of birth
                 </Text>
-          <Button
-            size="$4"
-            backgroundColor={colors.field}
-            borderColor={colors.border}
-            borderWidth={1}
-            justifyContent="flex-start"
-            onPress={() => {
-              const existing = memberForm.dob ? parseDateString(memberForm.dob) : undefined;
-              setMemberTempDob(existing ?? new Date(1990, 0, 1));
-              setMemberDobPickerVisible(true);
-            }}
-          >
-                  <Text color={memberForm.dob ? colors.text : colors.muted}>
-                    {memberForm.dob || 'Select birth date'}
-                  </Text>
+                <Button
+                  size="$4"
+                  backgroundColor={colors.field}
+                  borderColor={colors.border}
+                  borderWidth={1}
+                  justifyContent="flex-start"
+                  onPress={() => {
+                    const existing = memberForm.dob ? parseDateString(memberForm.dob) : undefined;
+                    setMemberTempDob(existing ?? new Date(1990, 0, 1));
+                    setMemberDobPickerVisible(true);
+                  }}
+                >
+                  <Text color={memberForm.dob ? colors.text : colors.muted}>{memberForm.dob || 'Select birth date'}</Text>
                 </Button>
               </YStack>
 
@@ -1029,13 +1288,13 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
 
                           let next: string[];
                           if (option === 'None') {
-                            next = current.includes('None') ? [] : ['None'];
+                            next = ['None'];
                           } else {
                             next = current.filter((value) => value !== 'None');
-                            if (current.includes(option)) {
+                            if (next.includes(option)) {
                               next = next.filter((value) => value !== option);
                             } else {
-                              next.push(option);
+                              next = [...next, option];
                             }
                             if (next.length === 0) {
                               next = ['None'];
@@ -1063,16 +1322,16 @@ const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
                   Cancel
                 </Text>
               </Button>
-              <Button
-                flex={1}
-                backgroundColor={colors.accent}
-                onPress={handleSubmitMember}
-                disabled={memberSaving}
-              >
-                <Text color={palette.accentForeground} fontWeight="600">
-                  {memberSaving ? 'Saving...' : 'Save member'}
-                </Text>
-              </Button>
+            <Button
+              flex={1}
+              backgroundColor={colors.accent}
+              onPress={handleSubmitMember}
+              disabled={memberSaving}
+            >
+              <Text color={palette.accentForeground} fontWeight="600">
+                {memberSaving ? 'Saving...' : editingMemberId ? 'Update member' : 'Save member'}
+              </Text>
+            </Button>
             </XStack>
           </YStack>
         </Card>
