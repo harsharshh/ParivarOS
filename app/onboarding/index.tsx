@@ -1,14 +1,14 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
+import { doc, setDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Card, Input, Text, XStack, YStack } from 'tamagui';
-import { doc, setDoc } from 'firebase/firestore';
 
-import { BrandLogoMark, BrandSpacing, BrandTypography } from '@/design-system';
 import { firebaseAuth, firebaseDb } from '@/config/firebase';
+import { BrandLogoMark, BrandSpacing, BrandTypography } from '@/design-system';
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const medicalOptions = ['None', 'Diabetes', 'Hypertension', 'Asthma', 'Allergies', 'Heart Conditions'];
@@ -111,7 +111,7 @@ export default function OnboardingScreen() {
           >
             <YStack gap="$3">
               <Text fontFamily={BrandTypography.caption.fontFamily} color="$color" opacity={0.8}>
-                Full Name
+                First Name
               </Text>
               <Input
                 value={name}

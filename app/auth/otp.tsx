@@ -2,12 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  PhoneAuthProvider,
-  signInWithCredential,
-  UserCredential,
-  RecaptchaVerifier,
-} from 'firebase/auth';
+import { PhoneAuthProvider, RecaptchaVerifier, UserCredential, signInWithCredential } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,9 +14,10 @@ import {
   firebaseOptions,
   isFirebaseConfigured,
 } from '@/config/firebase';
-import { BrandLogoMark, BrandSpacing, BrandTypography } from '@/design-system';
 import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
+import { BrandLogoMark, BrandSpacing, BrandTypography } from '@/design-system';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { withAlpha } from '@/utils/color';
 
 const DEFAULT_DIAL_CODE = '+91';
 
@@ -43,11 +39,34 @@ export default function OtpAuthScreen() {
 
   const themePalette = ThemeColors[colorScheme];
   const accentSpectrum = accentPalette[colorScheme];
+
+  const colors = useMemo(() => {
+    const accent = themePalette.accent;
+    return {
+      background: themePalette.background,
+      card: themePalette.surface,
+      surfaceMuted: themePalette.surfaceMuted,
+      border: themePalette.border,
+      outline: withAlpha(accent, colorScheme === 'dark' ? 0.42 : 0.28),
+      inputBorder: withAlpha(themePalette.text, colorScheme === 'dark' ? 0.3 : 0.18),
+      inputBackground: withAlpha(themePalette.inputBackground, colorScheme === 'dark' ? 0.9 : 0.92),
+      text: themePalette.text,
+      secondary: themePalette.subtleText,
+      muted: themePalette.mutedText,
+      accent,
+      accentForeground: themePalette.accentForeground,
+      accentStrong: themePalette.accentStrong,
+      shadow: themePalette.elevatedShadow,
+      danger: themePalette.danger,
+      dangerForeground: themePalette.dangerForeground,
+    };
+  }, [colorScheme, themePalette]);
+
   const gradientColors = useMemo(() => {
-    return colorScheme === 'dark'
-      ? [accentSpectrum[5], accentSpectrum[8]]
-      : [themePalette.background, accentSpectrum[2]];
-  }, [accentSpectrum, colorScheme, themePalette.background]);
+    const highlight = withAlpha(accentSpectrum[colorScheme === 'dark' ? 8 : 6], colorScheme === 'dark' ? 0.85 : 0.55);
+    const base = colors.background;
+    return colorScheme === 'dark' ? [highlight, base] : [base, highlight];
+  }, [accentSpectrum, colorScheme, colors.background]);
 
   const ensureWebRecaptcha = useCallback(() => {
     if (Platform.OS !== 'web' || !firebaseReady || !firebaseAuth || typeof document === 'undefined') {
@@ -202,7 +221,27 @@ export default function OtpAuthScreen() {
       await ensureUserDocument(userCredential);
 
       setStatusMessage('Verification successful! Redirecting…');
-      router.replace('/onboarding');
+      if (firebaseDb && userCredential.user) {
+        try {
+          const profileSnapshot = await getDoc(doc(firebaseDb, 'users', userCredential.user.uid));
+          const profileData = profileSnapshot.exists() ? profileSnapshot.data() : null;
+          const hasProfile =
+            profileData &&
+            typeof profileData.name === 'string' &&
+            profileData.name.trim().length > 0 &&
+            typeof profileData.bloodGroup === 'string' &&
+            profileData.bloodGroup.trim().length > 0 &&
+            typeof profileData.dob === 'string' &&
+            profileData.dob.trim().length > 0;
+
+          router.replace(hasProfile ? '/(tabs)' : '/onboarding');
+        } catch (error) {
+          console.warn('Failed to check profile after OTP verification', error);
+          router.replace('/(tabs)');
+        }
+      } else {
+        router.replace('/(tabs)');
+      }
     } catch (error: unknown) {
       console.error('Error verifying OTP', error);
       setErrorMessage(
@@ -236,6 +275,7 @@ export default function OtpAuthScreen() {
           paddingHorizontal={BrandSpacing.gutter}
           paddingVertical={BrandSpacing.stackGap}
           gap={BrandSpacing.stackGap}
+          backgroundColor="transparent"
         >
           <YStack ai="center" gap="$4">
             <BrandLogoMark size={128} />
@@ -243,7 +283,7 @@ export default function OtpAuthScreen() {
               fontFamily={BrandTypography.logo.fontFamily}
               fontWeight={BrandTypography.logo.fontWeight}
               fontSize={30}
-              color="$color"
+              color={colors.text}
             >
               ParivarOS
             </Text>
@@ -251,8 +291,7 @@ export default function OtpAuthScreen() {
               fontFamily={BrandTypography.tagline.fontFamily}
               fontWeight={BrandTypography.tagline.fontWeight}
               letterSpacing={BrandTypography.tagline.letterSpacing}
-              color="$color"
-              opacity={0.85}
+              color={colors.secondary}
               textAlign="center"
             >
               Connect. Care. Celebrate.
@@ -262,19 +301,18 @@ export default function OtpAuthScreen() {
           <YStack
             width="100%"
             maxWidth={360}
-            bg="$background"
+            backgroundColor={colors.card}
             borderRadius="$6"
             padding="$6"
             gap="$4"
-            elevation={2}
-            shadowColor="rgba(0,0,0,0.1)"
+            shadowColor={colors.shadow}
+            shadowRadius={24}
           >
             <YStack gap="$2">
               <Text
                 fontFamily={BrandTypography.caption.fontFamily}
                 fontWeight={BrandTypography.caption.fontWeight}
-                color="$color"
-                opacity={0.9}
+                color={colors.text}
               >
                 Mobile Number
               </Text>
@@ -283,16 +321,15 @@ export default function OtpAuthScreen() {
                 gap="$3"
                 borderRadius="$5"
                 borderWidth={1}
-                borderColor="rgba(148,124,255,0.4)"
+                borderColor={colors.inputBorder}
                 paddingHorizontal="$3"
                 paddingVertical="$2"
-                bg="rgba(148,124,255,0.08)"
+                backgroundColor={colors.inputBackground}
               >
                 <Text
                   fontFamily={BrandTypography.caption.fontFamily}
                   fontWeight={BrandTypography.caption.fontWeight}
-                  color="$color"
-                  opacity={0.9}
+                  color={colors.text}
                 >
                   {DEFAULT_DIAL_CODE}
                 </Text>
@@ -307,16 +344,22 @@ export default function OtpAuthScreen() {
                   placeholder="Enter your number"
                   size="$5"
                   textAlign="center"
+                  color={colors.text}
+                  placeholderTextColor={withAlpha(colors.text, 0.4)}
                 />
               </XStack>
               <Button
                 size="$4"
                 onPress={handleSendCode}
                 disabled={sendingCode || !firebaseReady}
-                theme="accent"
+                backgroundColor={colors.accent}
+                pressStyle={{ scale: 0.97, backgroundColor: colors.accentStrong }}
+                opacity={sendingCode || !firebaseReady ? 0.6 : 1}
                 borderRadius="$5"
               >
-                {sendingCode ? 'Sending…' : 'Send OTP'}
+                <Text color={colors.accentForeground} fontWeight="700">
+                  {sendingCode ? 'Sending…' : 'Send OTP'}
+                </Text>
               </Button>
             </YStack>
 
@@ -325,8 +368,7 @@ export default function OtpAuthScreen() {
                 <Text
                   fontFamily={BrandTypography.caption.fontFamily}
                   fontWeight={BrandTypography.caption.fontWeight}
-                  color="$color"
-                  opacity={0.9}
+                  color={colors.text}
                 >
                   Enter OTP
                 </Text>
@@ -338,32 +380,41 @@ export default function OtpAuthScreen() {
                   placeholder="••••••"
                   size="$5"
                   textAlign="center"
+                  color={colors.text}
+                  backgroundColor={colors.inputBackground}
+                  borderWidth={1}
+                  borderColor={colors.inputBorder}
+                  placeholderTextColor={withAlpha(colors.text, 0.4)}
                 />
                 <Button
                   size="$4"
                   onPress={handleVerifyCode}
                   disabled={verifyingCode || !firebaseReady}
-                  themeInverse
+                  backgroundColor={colors.accentStrong}
+                  pressStyle={{ scale: 0.97 }}
+                  opacity={verifyingCode || !firebaseReady ? 0.6 : 1}
                   borderRadius="$5"
                 >
-                  {verifyingCode ? 'Verifying…' : 'Verify & Continue'}
+                  <Text color={colors.accentForeground} fontWeight="700">
+                    {verifyingCode ? 'Verifying…' : 'Verify & Continue'}
+                  </Text>
                 </Button>
               </YStack>
             )}
 
             {statusMessage && (
-              <Text color="$color" opacity={0.8} textAlign="center">
+              <Text color={colors.secondary} textAlign="center">
                 {statusMessage}
               </Text>
             )}
 
             {errorMessage && (
-              <Text color="$red10" textAlign="center">
+              <Text color={colors.danger} textAlign="center">
                 {errorMessage}
               </Text>
             )}
             {!firebaseReady && !errorMessage && (
-              <Text color="$color" opacity={0.7} textAlign="center">
+              <Text color={colors.muted} textAlign="center">
                 Firebase setup is required to complete sign in. Add your project keys to app.json.
               </Text>
             )}
