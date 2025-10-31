@@ -1,4 +1,29 @@
-import { ChevronRight } from '@tamagui/lucide-icons';
+import {
+  Activity,
+  Baby,
+  Book,
+  BookOpen,
+  Compass,
+  Flame,
+  Gamepad2,
+  Heart,
+  HeartPulse,
+  Home,
+  Image,
+  Lock,
+  MessageCircle,
+  Repeat,
+  Shield,
+  Sparkles,
+  Stethoscope,
+  Sun,
+  TreePine,
+  Users,
+  Utensils,
+  Wallet,
+  ChevronRight,
+} from '@tamagui/lucide-icons';
+import type { IconProps } from '@tamagui/lucide-icons';
 import { useMemo } from 'react';
 import { Card, Text, YStack, useThemeName } from 'tamagui';
 
@@ -11,9 +36,43 @@ export type ModuleCardProps = {
   description: string;
   onPress?: () => void;
   layout?: 'half' | 'full';
+  iconKey?: keyof typeof moduleIconMap;
 };
 
-export function ModuleCard({ title, subtitle, description, onPress, layout = 'half' }: ModuleCardProps) {
+const moduleIconMap = {
+  home: Users,
+  tree: TreePine,
+  memories: Image,
+  tribute: Flame,
+  culture: BookOpen,
+  chat: MessageCircle,
+  eldercare: HeartPulse,
+  wellbeing: Sun,
+  health: Stethoscope,
+  gratitude: Heart,
+  safety: Shield,
+  household: Home,
+  kitchen: Utensils,
+  habits: Repeat,
+  finance: Wallet,
+  vault: Lock,
+  vastu: Compass,
+  spiritual: Book,
+  kids: Baby,
+  fun: Gamepad2,
+  stories: BookOpen,
+  ai: Sparkles,
+  vitality: Activity,
+} satisfies Record<string, (props: IconProps) => JSX.Element>;
+
+function getIconComponent(iconKey?: keyof typeof moduleIconMap) {
+  if (iconKey && moduleIconMap[iconKey]) {
+    return moduleIconMap[iconKey];
+  }
+  return moduleIconMap.home;
+}
+
+export function ModuleCard({ title, subtitle, description, onPress, layout = 'half', iconKey }: ModuleCardProps) {
   const themeName = useThemeName();
   const colorScheme: 'light' | 'dark' = themeName?.toString().startsWith('dark') ? 'dark' : 'light';
   const palette = ThemeColors[colorScheme];
@@ -31,11 +90,14 @@ export function ModuleCard({ title, subtitle, description, onPress, layout = 'ha
       description: palette.mutedText,
       shadow: palette.shadow,
       accent: palette.accent,
+      iconGlow: isDark ? 'transparent' : withAlpha(palette.accentStrong, 0.26),
+      iconBackground: isDark ? withAlpha(accentSpectrum[6], 0.18) : palette.surface,
     }),
     [isDark, palette]
   );
 
   const width = layout === 'half' ? '48%' : '100%';
+  const IconComponent = getIconComponent(iconKey);
 
   return (
     <Card
@@ -54,12 +116,29 @@ export function ModuleCard({ title, subtitle, description, onPress, layout = 'ha
       disabled={!onPress}
     >
       <YStack gap="$3" flex={1} position="relative">
-        <YStack gap="$2">
-          <Text color={colors.title} fontSize={16} fontWeight="600">
-            {title}
-          </Text>
-          <Text color={colors.subtitle} fontSize={14}>
+        <YStack
+          position="absolute"
+          top={-20}
+          right={-28}
+          width={48}
+          height={48}
+          borderRadius={24}
+          backgroundColor={colors.iconBackground}
+          ai="center"
+          jc="center"
+          shadowColor={colors.iconGlow}
+          shadowRadius={18}
+          pointerEvents="none"
+        >
+          <IconComponent color={colors.accent} size={18} />
+        </YStack>
+
+        <YStack gap="$2" paddingTop="36px">
+          <Text color={colors.title} fontSize={18} fontWeight="700">
             {subtitle}
+          </Text>
+          <Text color={colors.subtitle} fontSize={14} fontWeight="600">
+            {title}
           </Text>
           <Text color={colors.description} fontSize={12} lineHeight={16}>
             {description}

@@ -46,111 +46,133 @@ const familyModules = [
     title: 'Kutumb Kendra',
     subtitle: 'कुटुंब केन्द्र',
     description: 'Family dashboard for birthdays, events, alerts.',
+    icon: 'home',
   },
   {
     title: 'Parivar Vriksh',
     subtitle: 'परिवार वृक्ष',
     description: 'Core family tree with self, spouse, kids, parents.',
+    icon: 'tree',
   },
   {
     title: 'Smriti Mandal',
     subtitle: 'स्मृति मण्डल',
     description: 'Photos, videos, voice notes, and treasured moments.',
+    icon: 'memories',
   },
   {
     title: 'Shraddhanjali',
     subtitle: 'श्रद्धांजलि',
     description: 'Remembrance hub for ancestors and anniversaries.',
+    icon: 'tribute',
   },
   {
     title: 'Sanskaar Dhan',
     subtitle: 'संस्कार धन',
     description: 'Culture, recipes, family values, and rituals archive.',
+    icon: 'culture',
   },
   {
     title: 'Baithak',
     subtitle: 'बैठक',
     description: 'Private family chat with shared daily planner.',
+    icon: 'chat',
   },
   {
     title: 'Sparsh+',
     subtitle: 'स्पर्श',
     description: 'Elder-care companion with voice-first updates.',
+    icon: 'eldercare',
   },
   {
     title: 'ManMandal',
     subtitle: 'मनमण्डल',
     description: 'Emotional check-ins and wellbeing insights.',
+    icon: 'wellbeing',
   },
   {
     title: 'AarogyaBandhan',
     subtitle: 'आरोग्य बन्धन',
     description: 'Health tracker and reminders',
+    icon: 'health',
   },
   {
     title: 'SevaBank',
     subtitle: 'सेवा बैंक',
     description: 'Family gratitude, help, and support tracker.',
+    icon: 'gratitude',
   },
   {
     title: 'Suraksha Kavach',
     subtitle: 'सुरक्षा कवच',
     description: 'SOS, geofence, and emergency contact alerts.',
+    icon: 'safety',
   },
   {
     title: 'GharSeva',
     subtitle: 'घरसेवा',
     description: 'Household chores, staff, and routine management.',
+    icon: 'household',
   },
   {
     title: 'RasoiOS',
     subtitle: 'रसोई ओएस',
     description: 'Kitchen planner for groceries, inventory, recipes.',
+    icon: 'kitchen',
   },
   {
     title: 'Niyam',
     subtitle: 'नियम',
     description: 'Habits, reminders, and routine builder.',
+    icon: 'habits',
   },
   {
     title: 'KhataSmart',
     subtitle: 'खाता स्मार्ट',
     description: 'Family expenses, lending, and gifting ledger.',
+    icon: 'finance',
   },
   {
     title: 'GharPatrika',
     subtitle: 'घरपत्रिका',
     description: 'Secure locker for IDs, insurance, receipts.',
+    icon: 'vault',
   },
   {
     title: 'VastuSaathi',
     subtitle: 'वास्तु साथी',
     description: 'Home harmony and Vastu energy balancing guide.',
+    icon: 'vastu',
   },
   {
     title: 'MandirOS',
     subtitle: 'मंदिर ओएस',
     description: 'Aarti,panchang,bhajan and devotional reminders.',
+    icon: 'spiritual',
   },
   {
     title: 'Chhoti Duniya',
     subtitle: 'छोटी दुनिया',
     description: 'Kids’ zone with drawings, learning, and diary.',
+    icon: 'kids',
   },
   {
     title: 'MastiGhar',
     subtitle: 'मस्तीघर',
     description: 'Fun games and engagements for the whole family.',
+    icon: 'fun',
   },
   {
     title: 'KathaLok',
     subtitle: 'कथालोक',
     description: 'AI-crafted family stories from your memories.',
+    icon: 'stories',
   },
   {
     title: 'ParivarAI',
     subtitle: 'परिवार एआई',
     description: 'Family assistant for summaries, reminders, and chats.',
+    icon: 'ai',
   },
 ];
 
@@ -480,6 +502,7 @@ export default function HomeScreen() {
               title={module.title}
               subtitle={module.subtitle}
               description={module.description}
+              iconKey={module.icon}
               onPress={() => handleModulePress(module.title)}
             />
           ))}
