@@ -13,11 +13,18 @@ export type LatestFamilyDraft = {
   updatedAt?: number;
 };
 
+export type PrimaryFamilyInfo = {
+  id?: string;
+  name: string;
+  relationship?: string;
+};
+
 export function useParivarStatus() {
   const [profileName, setProfileName] = useState(DEFAULT_NAME);
   const [hasCreatedParivar, setHasCreatedParivar] = useState(false);
   const [hasJoinedParivar, setHasJoinedParivar] = useState(false);
   const [latestFamilyDraft, setLatestFamilyDraft] = useState<LatestFamilyDraft | null>(null);
+  const [primaryFamily, setPrimaryFamily] = useState<PrimaryFamilyInfo | null>(null);
 
   const refreshStatus = useCallback(async () => {
     if (!firebaseAuth?.currentUser || !firebaseDb) {
@@ -54,6 +61,27 @@ export function useParivarStatus() {
         setHasCreatedParivar(created.length > 0);
         setHasJoinedParivar(joined.length > 0);
 
+        const familiesRaw = Array.isArray((data as { families?: unknown[] }).families)
+          ? ((data as { families?: unknown[] }).families as unknown[])
+          : [];
+        const normalizedFamilies = familiesRaw.filter((entry) => entry && typeof entry === 'object') as Array<
+          Record<string, unknown>
+        >;
+        const primaryEntry =
+          normalizedFamilies.find((family) =>
+            typeof family.relationship === 'string' && family.relationship.toLowerCase() === 'self'
+          ) || normalizedFamilies[0];
+        if (primaryEntry && typeof primaryEntry.name === 'string') {
+          setPrimaryFamily({
+            id: typeof primaryEntry.id === 'string' ? primaryEntry.id : undefined,
+            name: primaryEntry.name,
+            relationship:
+              typeof primaryEntry.relationship === 'string' ? primaryEntry.relationship : undefined,
+          });
+        } else {
+          setPrimaryFamily(null);
+        }
+
         const rawDraft = (data as { latestFamilyDraft?: unknown }).latestFamilyDraft;
         if (rawDraft && typeof rawDraft === 'object' && rawDraft !== null) {
           const draft = rawDraft as Record<string, unknown>;
@@ -87,6 +115,7 @@ export function useParivarStatus() {
         setHasCreatedParivar(false);
         setHasJoinedParivar(false);
         setLatestFamilyDraft(null);
+        setPrimaryFamily(null);
       }
     } catch (error) {
       console.warn('Failed to load parivar status', error);
@@ -94,6 +123,7 @@ export function useParivarStatus() {
       setHasCreatedParivar(false);
       setHasJoinedParivar(false);
       setLatestFamilyDraft(null);
+      setPrimaryFamily(null);
     }
   }, []);
 
@@ -107,5 +137,6 @@ export function useParivarStatus() {
     hasJoinedParivar,
     refreshStatus,
     latestFamilyDraft,
+    primaryFamily,
   };
 }

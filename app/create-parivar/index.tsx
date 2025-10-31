@@ -698,6 +698,31 @@ export default function CreateParivarScreen() {
         updatedAt: serverTimestamp(),
       });
 
+      if (hydratedMember.id !== ownerMember.id) {
+        const invitedUserRef = doc(firebaseDb, 'users', hydratedMember.id);
+        const invitedPayload: Record<string, unknown> = {
+          name,
+          relationship,
+          gender: memberForm.gender || deleteField(),
+          bloodGroup: bloodGroup || deleteField(),
+          dob: memberForm.dob || deleteField(),
+          medicalConditions: medicalConditions.length ? medicalConditions : deleteField(),
+          status: 'INVITED',
+          familyId,
+          invitedBy: user.uid,
+          updatedAt: serverTimestamp(),
+        };
+        if (cleanedPhone) {
+          invitedPayload.phoneNumber = `${defaultPhoneCountryCode}${cleanedPhone}`;
+        } else if (editingMemberId) {
+          invitedPayload.phoneNumber = deleteField();
+        }
+        if (!editingMemberId) {
+          invitedPayload.createdAt = serverTimestamp();
+        }
+        await setDoc(invitedUserRef, invitedPayload, { merge: true });
+      }
+
       const userRef = doc(firebaseDb, 'users', user.uid);
       await setDoc(
         userRef,
@@ -738,6 +763,7 @@ export default function CreateParivarScreen() {
     memberForm,
     members,
     editingMemberId,
+    ownerMember,
     user,
   ]);
 
@@ -772,6 +798,18 @@ export default function CreateParivarScreen() {
           members: serializedMembers,
           updatedAt: serverTimestamp(),
         });
+
+        if (target.id !== ownerMember.id) {
+          await setDoc(
+            doc(firebaseDb, 'users', target.id),
+            {
+              status: 'DELETED',
+              familyId,
+              updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
+        }
 
         const userRef = doc(firebaseDb, 'users', user.uid);
         await setDoc(
@@ -808,7 +846,7 @@ export default function CreateParivarScreen() {
       } finally {
         setMemberSaving(false);
       }
-    }, [cancelMemberForm, editingMemberId, ensureOwnerMember, familyId, familyName, members, user]);
+    }, [cancelMemberForm, editingMemberId, ensureOwnerMember, familyId, familyName, members, ownerMember, user]);
 
   const handleFinalize = useCallback(async () => {
     if (!firebaseDb || !user || !familyId) {

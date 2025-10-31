@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { PhoneAuthProvider, RecaptchaVerifier, UserCredential, signInWithCredential } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { Platform } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input, Text, XStack, YStack } from 'tamagui';
 
@@ -267,160 +267,174 @@ export default function OtpAuthScreen() {
         />
       )}
 
-      <SafeAreaView style={{ flex: 1 }}>
-        <YStack
-          f={1}
-          ai="center"
-          jc="center"
-          paddingHorizontal={BrandSpacing.gutter}
-          paddingVertical={BrandSpacing.stackGap}
-          gap={BrandSpacing.stackGap}
-          backgroundColor="transparent"
-        >
-          <YStack ai="center" gap="$4">
-            <BrandLogoMark size={128} />
-            <Text
-              fontFamily={BrandTypography.logo.fontFamily}
-              fontWeight={BrandTypography.logo.fontWeight}
-              fontSize={30}
-              color={colors.text}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={0}
+      >
+        <SafeAreaView style={{ flex: 1 }}>
+          <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+            <YStack
+              f={1}
+              ai="center"
+              jc="center"
+              paddingHorizontal={BrandSpacing.gutter}
+              paddingVertical={BrandSpacing.stackGap}
+              gap={BrandSpacing.stackGap}
+              backgroundColor="transparent"
             >
-              ParivarOS
-            </Text>
-            <Text
-              fontFamily={BrandTypography.tagline.fontFamily}
-              fontWeight={BrandTypography.tagline.fontWeight}
-              letterSpacing={BrandTypography.tagline.letterSpacing}
-              color={colors.secondary}
-              textAlign="center"
-            >
-              Connect. Care. Celebrate.
-            </Text>
-          </YStack>
-
-          <YStack
-            width="100%"
-            maxWidth={360}
-            backgroundColor={colors.card}
-            borderRadius="$6"
-            padding="$6"
-            gap="$4"
-            shadowColor={colors.shadow}
-            shadowRadius={24}
-          >
-            <YStack gap="$2">
-              <Text
-                fontFamily={BrandTypography.caption.fontFamily}
-                fontWeight={BrandTypography.caption.fontWeight}
-                color={colors.text}
-              >
-                Mobile Number
-              </Text>
-              <XStack
-                ai="center"
-                gap="$3"
-                borderRadius="$5"
-                borderWidth={1}
-                borderColor={colors.inputBorder}
-                paddingHorizontal="$3"
-                paddingVertical="$2"
-                backgroundColor={colors.inputBackground}
-              >
+              <YStack ai="center" gap="$4">
+                <BrandLogoMark size={128} />
                 <Text
-                  fontFamily={BrandTypography.caption.fontFamily}
-                  fontWeight={BrandTypography.caption.fontWeight}
+                  fontFamily={BrandTypography.logo.fontFamily}
+                  fontWeight={BrandTypography.logo.fontWeight}
+                  fontSize={30}
                   color={colors.text}
                 >
-                  {DEFAULT_DIAL_CODE}
+                  ParivarOS
                 </Text>
-                <Input
-                  flex={1}
-                  borderWidth={0}
-                  backgroundColor="transparent"
-                  value={localNumber}
-                  onChangeText={(value) => setLocalNumber(value.replace(/\D/g, ''))}
-                  keyboardType="phone-pad"
-                  autoComplete="tel"
-                  placeholder="Enter your number"
-                  size="$5"
-                  textAlign="center"
-                  color={colors.text}
-                  placeholderTextColor={withAlpha(colors.text, 0.4)}
-                />
-              </XStack>
-              <Button
-                size="$4"
-                onPress={handleSendCode}
-                disabled={sendingCode || !firebaseReady}
-                backgroundColor={colors.accent}
-                pressStyle={{ scale: 0.97, backgroundColor: colors.accentStrong }}
-                opacity={sendingCode || !firebaseReady ? 0.6 : 1}
-                borderRadius="$5"
-              >
-                <Text color={colors.accentForeground} fontWeight="700">
-                  {sendingCode ? 'Sending…' : 'Send OTP'}
-                </Text>
-              </Button>
-            </YStack>
-
-            {verificationId && (
-              <YStack gap="$2">
                 <Text
-                  fontFamily={BrandTypography.caption.fontFamily}
-                  fontWeight={BrandTypography.caption.fontWeight}
-                  color={colors.text}
-                >
-                  Enter OTP
-                </Text>
-                <Input
-                  value={verificationCode}
-                  onChangeText={setVerificationCode}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  placeholder="••••••"
-                  size="$5"
+                  fontFamily={BrandTypography.tagline.fontFamily}
+                  fontWeight={BrandTypography.tagline.fontWeight}
+                  letterSpacing={BrandTypography.tagline.letterSpacing}
+                  color={colors.secondary}
                   textAlign="center"
-                  color={colors.text}
-                  backgroundColor={colors.inputBackground}
-                  borderWidth={1}
-                  borderColor={colors.inputBorder}
-                  placeholderTextColor={withAlpha(colors.text, 0.4)}
-                />
-                <Button
-                  size="$4"
-                  onPress={handleVerifyCode}
-                  disabled={verifyingCode || !firebaseReady}
-                  backgroundColor={colors.accentStrong}
-                  pressStyle={{ scale: 0.97 }}
-                  opacity={verifyingCode || !firebaseReady ? 0.6 : 1}
-                  borderRadius="$5"
                 >
-                  <Text color={colors.accentForeground} fontWeight="700">
-                    {verifyingCode ? 'Verifying…' : 'Verify & Continue'}
-                  </Text>
-                </Button>
+                  Connect. Care. Celebrate.
+                </Text>
               </YStack>
-            )}
 
-            {statusMessage && (
-              <Text color={colors.secondary} textAlign="center">
-                {statusMessage}
-              </Text>
-            )}
+              <YStack
+                width="100%"
+                maxWidth={360}
+                backgroundColor={colors.card}
+                borderRadius="$6"
+                padding="$6"
+                gap="$4"
+                shadowColor={colors.shadow}
+                shadowRadius={24}
+              >
+                <YStack gap="$2">
+                  <Text
+                    fontFamily={BrandTypography.caption.fontFamily}
+                    fontWeight={BrandTypography.caption.fontWeight}
+                    color={colors.text}
+                  >
+                    Mobile Number
+                  </Text>
+                  <XStack
+                    ai="center"
+                    gap="$3"
+                    borderRadius="$5"
+                    borderWidth={1}
+                    borderColor={colors.inputBorder}
+                    paddingHorizontal="$3"
+                    paddingVertical="$2"
+                    backgroundColor={colors.inputBackground}
+                  >
+                    <Text
+                      fontFamily={BrandTypography.caption.fontFamily}
+                      fontWeight={BrandTypography.caption.fontWeight}
+                      color={colors.text}
+                    >
+                      {DEFAULT_DIAL_CODE}
+                    </Text>
+                    <Input
+                      flex={1}
+                      borderWidth={0}
+                      backgroundColor="transparent"
+                      value={localNumber}
+                      onChangeText={(value) => setLocalNumber(value.replace(/\D/g, ''))}
+                      keyboardType="phone-pad"
+                      autoComplete="tel"
+                      placeholder="Enter your number"
+                      size="$5"
+                      textAlign="center"
+                      color={colors.text}
+                      placeholderTextColor={withAlpha(colors.text, 0.4)}
+                      returnKeyType="done"
+                      blurOnSubmit
+                      onSubmitEditing={Keyboard.dismiss}
+                    />
+                  </XStack>
+                  <Button
+                    size="$4"
+                    onPress={handleSendCode}
+                    disabled={sendingCode || !firebaseReady}
+                    backgroundColor={colors.accent}
+                    pressStyle={{ scale: 0.97, backgroundColor: colors.accentStrong }}
+                    opacity={sendingCode || !firebaseReady ? 0.6 : 1}
+                    borderRadius="$5"
+                  >
+                    <Text color={colors.accentForeground} fontWeight="700">
+                      {sendingCode ? 'Sending…' : 'Send OTP'}
+                    </Text>
+                  </Button>
+                </YStack>
 
-            {errorMessage && (
-              <Text color={colors.danger} textAlign="center">
-                {errorMessage}
-              </Text>
-            )}
-            {!firebaseReady && !errorMessage && (
-              <Text color={colors.muted} textAlign="center">
-                Firebase setup is required to complete sign in. Add your project keys to app.json.
-              </Text>
-            )}
-          </YStack>
-        </YStack>
-      </SafeAreaView>
+                {verificationId && (
+                  <YStack gap="$2">
+                    <Text
+                      fontFamily={BrandTypography.caption.fontFamily}
+                      fontWeight={BrandTypography.caption.fontWeight}
+                      color={colors.text}
+                    >
+                      Enter OTP
+                    </Text>
+                    <Input
+                      value={verificationCode}
+                      onChangeText={setVerificationCode}
+                      keyboardType="number-pad"
+                      maxLength={6}
+                      placeholder="••••••"
+                      size="$5"
+                      textAlign="center"
+                      color={colors.text}
+                      backgroundColor={colors.inputBackground}
+                      borderWidth={1}
+                      borderColor={colors.inputBorder}
+                      placeholderTextColor={withAlpha(colors.text, 0.4)}
+                      returnKeyType="done"
+                      blurOnSubmit
+                      onSubmitEditing={Keyboard.dismiss}
+                    />
+                    <Button
+                      size="$4"
+                      onPress={handleVerifyCode}
+                      disabled={verifyingCode || !firebaseReady}
+                      backgroundColor={colors.accentStrong}
+                      pressStyle={{ scale: 0.97 }}
+                      opacity={verifyingCode || !firebaseReady ? 0.6 : 1}
+                      borderRadius="$5"
+                    >
+                      <Text color={colors.accentForeground} fontWeight="700">
+                        {verifyingCode ? 'Verifying…' : 'Verify & Continue'}
+                      </Text>
+                    </Button>
+                  </YStack>
+                )}
+
+                {statusMessage && (
+                  <Text color={colors.secondary} textAlign="center">
+                    {statusMessage}
+                  </Text>
+                )}
+
+                {errorMessage && (
+                  <Text color={colors.danger} textAlign="center">
+                    {errorMessage}
+                  </Text>
+                )}
+                {!firebaseReady && !errorMessage && (
+                  <Text color={colors.muted} textAlign="center">
+                    Firebase setup is required to complete sign in. Add your project keys to app.json.
+                  </Text>
+                )}
+              </YStack>
+            </YStack>
+          </Pressable>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 }

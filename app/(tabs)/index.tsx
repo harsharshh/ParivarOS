@@ -1,17 +1,17 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { Bell } from '@tamagui/lucide-icons';
+import { useRouter } from 'expo-router';
 import { useCallback, useContext, useMemo, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, Card, Spinner, Text, XStack, YStack } from 'tamagui';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
 
 import { ThemePreferenceContext } from '@/app/_layout';
 import { firebaseAuth } from '@/config/firebase';
 import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
-import { BrandSpacing, BrandTypography, ModuleCard, ParivarCtaCard, StatsCard } from '@/design-system';
-import { withAlpha } from '@/utils/color';
+import { BrandSpacing, BrandTypography, HomeNameplate, ModuleCard, ParivarCtaCard, StatsCard } from '@/design-system';
 import { useParivarStatus } from '@/hooks/use-parivar-status';
+import { withAlpha } from '@/utils/color';
 import { getCreateParivarProgress } from '@/utils/create-parivar-storage';
 
 const summaryCardDefinitions = [
@@ -207,7 +207,7 @@ export default function HomeScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
-  const { profileName, hasCreatedParivar, hasJoinedParivar, refreshStatus, latestFamilyDraft } =
+  const { profileName, hasCreatedParivar, hasJoinedParivar, refreshStatus, latestFamilyDraft, primaryFamily } =
     useParivarStatus();
   const [hasCreateParivarProgress, setHasCreateParivarProgress] = useState(false);
 
@@ -266,6 +266,9 @@ export default function HomeScreen() {
       iconColor: palette.text,
       quoteBackground: palette.surfaceAlt,
       quoteText: palette.accentStrong,
+      plateBackground: withAlpha(palette.accent, themeName === 'dark' ? 0.18 : 0.1),
+      plateBorder: withAlpha(palette.accent, themeName === 'dark' ? 0.35 : 0.2),
+      plateAccent: palette.accent,
     };
   }, [palette, themeName]);
 
@@ -319,6 +322,16 @@ export default function HomeScreen() {
   const showCreateCTA = !hasCreatedParivar && !hasJoinedParivar;
   const showJoinCTA = hasCreatedParivar && !hasJoinedParivar;
   const createButtonLabel = hasCreateParivarProgress ? 'Continue creating Parivar' : 'Create Parivar';
+  const familyName = latestFamilyDraft?.familyName || primaryFamily?.name || null;
+  const familyInitials = useMemo(() => {
+    if (!familyName) return '';
+    const tokens = familyName.trim().split(/\s+/).filter(Boolean);
+    if (!tokens.length) return '';
+    return tokens
+      .slice(0, 2)
+      .map((token) => token.charAt(0).toUpperCase())
+      .join('');
+  }, [familyName]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -433,6 +446,16 @@ export default function HomeScreen() {
           />
         }
       >
+        {familyName ? (
+          <HomeNameplate
+            themeName={themeName}
+            familyName={familyName}
+            initials={familyInitials}
+            accentColor={colors.plateAccent}
+            accentForeground={palette.accentForeground}
+          />
+        ) : null}
+
         {showCreateCTA && (
           <ParivarCtaCard
             marginTop={BrandSpacing.elementGap}
