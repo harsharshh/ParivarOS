@@ -32,7 +32,7 @@ import {
 
 import { ThemePreferenceContext } from '@/app/_layout';
 import { firebaseAuth, firebaseDb } from '@/config/firebase';
-import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
+import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography } from '@/design-system';
 import { FamilyTreeIllustration } from '@/design-system/illustrations';
 import { withAlpha } from '@/utils/color';
@@ -109,24 +109,24 @@ export default function CreateParivarScreen() {
   const router = useRouter();
   const { themeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
-  const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
   const accentSpectrum = accentPalette[themeName];
   const colors = useMemo(() => {
-    const accentSoft = accentSpectrum[themeName === 'dark' ? 4 : 2];
+    const accentSoft = withAlpha(palette.accent, themeName === 'dark' ? 0.3 : 0.16);
     return {
       background: palette.background,
-      card: basePalette[themeName === 'dark' ? 2 : 1],
-      border: basePalette[themeName === 'dark' ? 6 : 7],
-      accent: palette.tint,
+      card: palette.surface,
+      accent: palette.accent,
       accentSoft,
-      accentFaint: withAlpha(accentSoft, themeName === 'dark' ? 0.35 : 0.18),
+      accentFaint: withAlpha(palette.accent, themeName === 'dark' ? 0.18 : 0.12),
       text: palette.text,
-      muted: basePalette[themeName === 'dark' ? 9 : 6],
-      surface: withAlpha(palette.tint, themeName === 'dark' ? 0.22 : 0.12),
-      avatar: withAlpha(palette.tint, themeName === 'dark' ? 0.35 : 0.25),
-      field: themeName === 'dark' ? basePalette[4] : '#fff',
+      muted: palette.subtleText,
+      surface: palette.surfaceAlt,
+      avatar: withAlpha(accentSpectrum[themeName === 'dark' ? 6 : 3], themeName === 'dark' ? 0.28 : 0.18),
+      field: palette.inputBackground,
+      shadow: palette.elevatedShadow,
+      border: palette.border,
     };
-  }, [accentSpectrum, basePalette, palette, themeName]);
+  }, [accentSpectrum, palette, themeName]);
 
   const user = firebaseAuth?.currentUser;
   const [hydrating, setHydrating] = useState(true);
@@ -605,9 +605,11 @@ export default function CreateParivarScreen() {
             <Button
               size="$3"
               circular
-              variant="outlined"
-              borderColor={colors.border}
-              icon={ArrowLeft}
+              icon={<ArrowLeft color={colors.text} size={18} />}
+              backgroundColor={colors.card}
+              shadowColor={colors.shadow}
+              shadowRadius={12}
+              pressStyle={{ scale: 0.94 }}
               onPress={handleGoBack}
             />
             <YStack>
@@ -625,13 +627,7 @@ export default function CreateParivarScreen() {
             </YStack>
           </XStack>
 
-          <Card
-            padding="$4"
-            bordered
-            borderColor={colors.border}
-            backgroundColor={colors.card}
-            alignSelf="center"
-          >
+          <Card padding="$4" backgroundColor={colors.card} alignSelf="center" shadowColor={colors.shadow} shadowRadius={18}>
             <XStack ai="center" jc="center" gap="$4">
               {steps.map((item, index) => {
                 const isActive = step === item.id;
@@ -683,10 +679,10 @@ export default function CreateParivarScreen() {
           {step === 1 ? (
             <Card
               elevate
-              bordered
               padding="$5"
               backgroundColor={colors.card}
-              borderColor={colors.border}
+              shadowColor={colors.shadow}
+              shadowRadius={22}
             >
               <YStack gap="$5">
                 <YStack ai="center">
@@ -716,10 +712,13 @@ export default function CreateParivarScreen() {
                     autoCapitalize="words"
                     size="$5"
                     bg={colors.field}
-                    borderColor={familyNameError ? '#FF5A5F' : colors.border}
+                    borderColor={familyNameError ? palette.danger : colors.border}
+                    borderWidth={1}
+                    color={colors.text}
+                    placeholderTextColor={colors.muted}
                   />
                   {familyNameError ? (
-                    <Text color="#FF5A5F" fontSize={13}>
+                    <Text color={palette.danger} fontSize={13}>
                       {familyNameError}
                     </Text>
                   ) : (
@@ -731,23 +730,19 @@ export default function CreateParivarScreen() {
 
                 <Button
                   size="$5"
-                  themeInverse
+                  backgroundColor={colors.accent}
                   onPress={handleSaveFamilyName}
                   disabled={familyNameBusy}
                 >
-                  {familyNameBusy ? 'Saving...' : 'Save & Continue'}
+                  <Text color={palette.accentForeground} fontWeight="600">
+                    {familyNameBusy ? 'Saving...' : 'Save & Continue'}
+                  </Text>
                 </Button>
               </YStack>
             </Card>
           ) : (
             <YStack gap="$5">
-              <Card
-                bordered
-                padding="$4"
-                gap="$2"
-                borderColor={colors.border}
-                backgroundColor={colors.card}
-              >
+              <Card padding="$4" gap="$2" backgroundColor={colors.card} shadowColor={colors.shadow} shadowRadius={16}>
                 <Text fontSize={16} fontWeight="700" color={colors.text}>
                   {familyName}
                 </Text>
@@ -766,11 +761,11 @@ export default function CreateParivarScreen() {
                   return (
                     <Card
                       key={member.id}
-                      bordered
                       padding="$4"
                       backgroundColor={isOwner ? colors.accentFaint : colors.card}
-                      borderColor={colors.border}
                       gap="$3"
+                      shadowColor={colors.shadow}
+                      shadowRadius={isOwner ? 18 : 12}
                     >
                       <XStack ai="center" gap="$3">
                         <YStack
@@ -804,12 +799,14 @@ export default function CreateParivarScreen() {
                             <Button
                               key={condition}
                               size="$2"
-                              variant="outlined"
-                              borderColor={colors.border}
+                              backgroundColor={colors.accentSoft}
                               paddingHorizontal="$3"
                               paddingVertical="$1"
+                              color={colors.text}
                             >
-                              <Text fontSize={12}>{condition}</Text>
+                              <Text fontSize={12} color={colors.text}>
+                                {condition}
+                              </Text>
                             </Button>
                           ))}
                         </XStack>
@@ -821,21 +818,26 @@ export default function CreateParivarScreen() {
 
               <Button
                 size="$5"
-                variant="outlined"
-                borderColor={colors.border}
-                icon={Plus}
+                icon={<Plus color={colors.text} size={20} />}
+                backgroundColor={colors.card}
+                shadowColor={colors.shadow}
+                shadowRadius={16}
                 onPress={openMemberModal}
               >
-                Add another member
+                <Text color={colors.text} fontWeight="600">
+                  Add another member
+                </Text>
               </Button>
               <YStack gap="$2">
                 <Button
                   size="$5"
-                  themeInverse
+                  backgroundColor={colors.accent}
                   onPress={handleFinalize}
                   disabled={finalizing}
                 >
-                  {finalizing ? 'Wrapping up...' : 'Finish creating Parivar'}
+                  <Text color={palette.accentForeground} fontWeight="600">
+                    {finalizing ? 'Wrapping up...' : 'Finish creating Parivar'}
+                  </Text>
                 </Button>
                 <Text fontSize={13} color={colors.muted} textAlign="center">
                   You can always add more members or update details later.
@@ -860,9 +862,9 @@ export default function CreateParivarScreen() {
             padding="$5"
             gap="$4"
             borderRadius="$6"
-            bg={colors.background}
-            borderColor={colors.border}
-            bordered
+            backgroundColor={colors.card}
+            shadowColor={colors.shadow}
+            shadowRadius={24}
           >
             <YStack gap="$2">
               <Text fontSize={18} fontWeight="700" color={colors.text}>
@@ -885,6 +887,9 @@ export default function CreateParivarScreen() {
                 size="$4"
                 bg={colors.field}
                 borderColor={colors.border}
+                borderWidth={1}
+                color={colors.text}
+                placeholderTextColor={colors.muted}
               />
               </YStack>
 
@@ -943,8 +948,7 @@ export default function CreateParivarScreen() {
                   Date of birth
                 </Text>
                 <Button
-                  variant="outlined"
-                  borderColor={colors.border}
+                  backgroundColor={colors.card}
                   justifyContent="flex-start"
                   onPress={() => {
                     setMemberTempDob(memberForm.dobDate ?? new Date(1990, 0, 1));
@@ -970,21 +974,31 @@ export default function CreateParivarScreen() {
                   rows={3}
                   bg={colors.field}
                   borderColor={colors.border}
+                  color={colors.text}
+                  placeholderTextColor={colors.muted}
                 />
               </YStack>
             </YStack>
 
             <XStack gap="$3">
-              <Button flex={1} variant="outlined" borderColor={colors.border} onPress={closeMemberModal}>
-                Cancel
+              <Button
+                flex={1}
+                backgroundColor={colors.card}
+                onPress={closeMemberModal}
+              >
+                <Text color={colors.text} fontWeight="600">
+                  Cancel
+                </Text>
               </Button>
               <Button
                 flex={1}
-                themeInverse
+                backgroundColor={colors.accent}
                 onPress={handleSubmitMember}
                 disabled={memberSaving}
               >
-                {memberSaving ? 'Saving...' : 'Save member'}
+                <Text color={palette.accentForeground} fontWeight="600">
+                  {memberSaving ? 'Saving...' : 'Save member'}
+                </Text>
               </Button>
             </XStack>
           </Card>
@@ -993,7 +1007,16 @@ export default function CreateParivarScreen() {
 
       <Modal transparent visible={memberDobPickerVisible} animationType="fade">
         <YStack f={1} bg="rgba(0,0,0,0.45)" jc="center" ai="center" padding="$4">
-          <Card width="100%" maxWidth={420} padding="$4" gap="$3" bg={colors.background} borderRadius="$6">
+          <Card
+            width="100%"
+            maxWidth={420}
+            padding="$4"
+            gap="$3"
+            backgroundColor={colors.card}
+            borderRadius="$6"
+            shadowColor={colors.shadow}
+            shadowRadius={20}
+          >
             <Text fontFamily={BrandTypography.caption.fontFamily} color={colors.text} opacity={0.9}>
               Select birth date
             </Text>
@@ -1011,15 +1034,16 @@ export default function CreateParivarScreen() {
             <XStack gap="$3">
               <Button
                 flex={1}
-                variant="outlined"
-                borderColor={colors.border}
+                backgroundColor={colors.card}
                 onPress={() => setMemberDobPickerVisible(false)}
               >
-                Cancel
+                <Text color={colors.text} fontWeight="600">
+                  Cancel
+                </Text>
               </Button>
               <Button
                 flex={1}
-                theme="accent"
+                backgroundColor={colors.accent}
                 onPress={() => {
                   const nextDob = formatDate(memberTempDob);
                   setMemberForm((prev) => ({
@@ -1030,7 +1054,9 @@ export default function CreateParivarScreen() {
                   setMemberDobPickerVisible(false);
                 }}
               >
-                Done
+                <Text color={palette.accentForeground} fontWeight="600">
+                  Done
+                </Text>
               </Button>
             </XStack>
           </Card>

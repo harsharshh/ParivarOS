@@ -6,7 +6,7 @@ import { Avatar, Button, Card, ListItem, Separator, Switch, Text, XStack, YStack
 
 import { ThemePreferenceContext } from '@/app/_layout';
 import { firebaseAuth, firebaseDb } from '@/config/firebase';
-import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
+import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography } from '@/design-system';
 import { withAlpha } from '@/utils/color';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -14,7 +14,6 @@ import { usePermissions } from '@/hooks/use-permissions';
 export default function AvatarScreen() {
   const { themeName, setThemeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
-  const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
   const permissions = usePermissions();
 
   const [profileName, setProfileName] = useState<string>('');
@@ -23,21 +22,21 @@ export default function AvatarScreen() {
     const accentSpectrum = accentPalette[themeName];
     return {
       background: palette.background,
-      card: basePalette[themeName === 'dark' ? 3 : 1],
-      border: basePalette[themeName === 'dark' ? 6 : 7],
-      surface: basePalette[themeName === 'dark' ? 5 : 2],
-      divider: basePalette[themeName === 'dark' ? 7 : 8],
+      card: palette.surface,
+      surface: palette.surfaceMuted,
+      divider: palette.border,
       text: palette.text,
-      secondary: basePalette[themeName === 'dark' ? 9 : 6],
-      accent: palette.tint,
-      avatarBackground: accentSpectrum[themeName === 'dark' ? 5 : 2],
+      secondary: palette.subtleText,
+      accent: palette.accent,
+      avatarBackground: palette.accent,
       avatarText: palette.accentForeground,
-      shadow: withAlpha(palette.tint, themeName === 'dark' ? 0.22 : 0.14),
-      thumbBackground: basePalette[themeName === 'dark' ? 2 : 0],
-      thumbIcon: themeName === 'dark' ? palette.accentForeground : palette.tint,
-      thumbTrack: accentSpectrum[themeName === 'dark' ? 3 : 1],
+      shadow: palette.elevatedShadow,
+      thumbBackground: themeName === 'dark' ? palette.surfaceAlt : palette.surface,
+      thumbIcon: themeName === 'dark' ? palette.text : palette.accent,
+      thumbTrack: withAlpha(accentSpectrum[themeName === 'dark' ? 6 : 4], themeName === 'dark' ? 0.4 : 0.32),
+      buttonBackground: palette.surface,
     };
-  }, [basePalette, palette, themeName]);
+  }, [palette, themeName]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -77,7 +76,7 @@ export default function AvatarScreen() {
       <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={22} fontWeight='700' color={colors.text}>
         My Profile
       </Text>
-      <Card padding="$4" backgroundColor={colors.card} bordered borderColor={colors.border} gap="$3" shadowColor={colors.shadow} shadowRadius={12}>
+      <Card padding="$4" backgroundColor={colors.card} gap="$3" shadowColor={colors.shadow} shadowRadius={18}>
         <XStack ai="center" gap="$3">
           <Avatar size="$5" circular bg={colors.avatarBackground} ai="center" jc="center">
             <Avatar.Image src={firebaseAuth?.currentUser?.photoURL ?? undefined} />
@@ -95,7 +94,13 @@ export default function AvatarScreen() {
               ParivarOS Member
             </Text>
           </YStack>
-          <Button size="$2" circular icon={Edit3} variant="outlined" borderColor={colors.border} />
+          <Button
+            size="$2"
+            circular
+            icon={<Edit3 color={colors.text} size={16} />}
+            backgroundColor={colors.buttonBackground}
+            pressStyle={{ scale: 0.96 }}
+          />
         </XStack>
 
         <XStack ai="center" jc="space-between" mt="$3">
@@ -106,6 +111,7 @@ export default function AvatarScreen() {
             checked={themeName === 'dark'}
             onCheckedChange={(value) => setThemeName(value ? 'dark' : 'light')}
             backgroundColor={colors.thumbTrack}
+            checkedStyle={{ backgroundColor: palette.accent }}
           >
             <Switch.Thumb
               backgroundColor={colors.thumbBackground}
@@ -122,7 +128,7 @@ export default function AvatarScreen() {
         </XStack>
       </Card>
 
-      <Card padding="$3" backgroundColor={colors.card} bordered borderColor={colors.border}>
+      <Card padding="$3" backgroundColor={colors.card} shadowColor={colors.shadow} shadowRadius={16}>
         <YStack gap="$3">
           {[
             { icon: UsersRound, label: 'Parivar Hub' },
@@ -132,8 +138,6 @@ export default function AvatarScreen() {
               key={item.label}
               borderRadius="$6"
               backgroundColor={colors.surface}
-              borderWidth={1}
-              borderColor={colors.border}
               icon={item.icon}
               pressTheme
             >
@@ -147,14 +151,12 @@ export default function AvatarScreen() {
 
       <Separator borderColor={colors.divider} marginVertical="$2" />
 
-      <Card padding="$3" backgroundColor={colors.card} bordered borderColor={colors.border}>
+      <Card padding="$3" backgroundColor={colors.card} shadowColor={colors.shadow} shadowRadius={16}>
         <YStack gap="$2">
           <ListItem
             borderRadius="$6"
             icon={Shield}
             backgroundColor={colors.surface}
-            borderWidth={1}
-            borderColor={colors.border}
             onPress={() => void permissions.requestPermissions()}
             pressTheme
           >
@@ -171,8 +173,6 @@ export default function AvatarScreen() {
             borderRadius="$6"
             icon={Settings}
             backgroundColor={colors.surface}
-            borderWidth={1}
-            borderColor={colors.border}
             pressTheme
           >
             <ListItem.Text numberOfLines={1} color={colors.text}>
@@ -183,8 +183,6 @@ export default function AvatarScreen() {
             borderRadius="$6"
             icon={LogOut}
             backgroundColor={colors.surface}
-            borderWidth={1}
-            borderColor={colors.border}
             pressTheme
           >
             <ListItem.Text numberOfLines={1} color={colors.text}>

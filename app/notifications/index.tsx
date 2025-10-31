@@ -4,7 +4,7 @@ import { Stack } from 'expo-router';
 import { Text, YStack } from 'tamagui';
 
 import { ThemePreferenceContext } from '@/app/_layout';
-import { ThemeColors, darkPalette, lightPalette } from '@/constants/tamagui-theme';
+import { ThemeColors } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography } from '@/design-system';
 
 const sampleNotifications = [
@@ -28,16 +28,17 @@ const sampleNotifications = [
 export default function NotificationsScreen() {
   const { themeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
-  const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
 
   const colors = useMemo(
     () => ({
       background: palette.background,
       text: palette.text,
-      secondary: basePalette[themeName === 'dark' ? 8 : 6],
-      muted: basePalette[themeName === 'dark' ? 6 : 5],
+      secondary: palette.subtleText,
+      muted: palette.mutedText,
+      card: palette.surface,
+      shadow: palette.shadow,
     }),
-    [basePalette, palette, themeName]
+    [palette]
   );
 
   return (
@@ -64,9 +65,9 @@ export default function NotificationsScreen() {
               key={`${note.title}-${note.timestamp}`}
               padding="$4"
               borderRadius="$6"
-              backgroundColor={basePalette[themeName === 'dark' ? 2 : 1]}
-              borderWidth={1}
-              borderColor={basePalette[themeName === 'dark' ? 4 : 3]}
+              backgroundColor={colors.card}
+              shadowColor={colors.shadow}
+              shadowRadius={14}
               gap="$2"
             >
               <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>

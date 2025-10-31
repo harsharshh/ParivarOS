@@ -10,11 +10,13 @@ type ParivarCtaCardProps = {
   buttonLabel: string;
   onPress: () => void;
   themeName: 'light' | 'dark';
-  backgroundColor: string;
-  borderColor: string;
-  shadowColor: string;
-  descriptionColor: string;
-  buttonTheme?: 'accent' | 'primary';
+  backgroundColor?: string;
+  shadowColor?: string;
+  descriptionColor?: string;
+  buttonTheme?: 'accent' | 'primary' | 'tint' | 'surface' | 'outline';
+  buttonBackgroundColor?: string;
+  buttonTextColor?: string;
+  marginTop?: number;
 };
 
 export const ParivarCtaCard = memo(function ParivarCtaCard({
@@ -24,34 +26,45 @@ export const ParivarCtaCard = memo(function ParivarCtaCard({
   onPress,
   themeName,
   backgroundColor,
-  borderColor,
   shadowColor,
   descriptionColor,
   buttonTheme = 'accent',
+  buttonBackgroundColor,
+  buttonTextColor,
+  marginTop,
 }: ParivarCtaCardProps) {
   const palette = ThemeColors[themeName];
+  const cardBackground = backgroundColor ?? palette.surface;
+  const cardShadow = shadowColor ?? palette.elevatedShadow;
+  const bodyText = descriptionColor ?? palette.subtleText;
 
   return (
     <Card
       padding="$5"
-      bordered
-      borderColor={borderColor}
-      backgroundColor={backgroundColor}
+      backgroundColor={cardBackground}
       gap="$4"
-      shadowColor={shadowColor}
-     // shadowRadius={20}
+      shadowColor={cardShadow}
+      shadowRadius={20}
+      marginTop={marginTop}
     >
       <YStack ai="center" gap="$3">
         <FamilyCardIllustration width={220} height={140} theme={themeName} />
         <Text fontSize={18} fontFamily="Inter SemiBold" color={palette.text} textAlign="center">
           {title}
         </Text>
-        <Paragraph color={descriptionColor} fontSize={14} textAlign="center">
+        <Paragraph color={bodyText} fontSize={14} textAlign="center">
           {description}
         </Paragraph>
       </YStack>
-      <Button size="$3" theme={buttonTheme} onPress={onPress}>
-        {buttonLabel}
+      <Button
+        size="$3"
+        theme={buttonTheme}
+        onPress={onPress}
+        backgroundColor={buttonBackgroundColor}
+      >
+        <Text color={buttonTextColor ?? palette.accentForeground} fontWeight="600">
+          {buttonLabel}
+        </Text>
       </Button>
     </Card>
   );

@@ -8,7 +8,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import { ThemePreferenceContext } from '@/app/_layout';
 import { firebaseAuth } from '@/config/firebase';
-import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
+import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography, ModuleCard, ParivarCtaCard, StatsCard } from '@/design-system';
 import { withAlpha } from '@/utils/color';
 import { useParivarStatus } from '@/hooks/use-parivar-status';
@@ -181,7 +181,6 @@ export default function HomeScreen() {
   const router = useRouter();
   const { themeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
-  const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
   const insets = useSafeAreaInsets();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -227,21 +226,25 @@ export default function HomeScreen() {
     const accentSpectrum = accentPalette[themeName];
     return {
       background: palette.background,
-      card: basePalette[themeName === 'dark' ? 3 : 1],
-      border: basePalette[themeName === 'dark' ? 6 : 7],
-      accent: palette.tint,
-      accentSoft: accentSpectrum[themeName === 'dark' ? 4 : 2],
+      card: palette.surface,
+      accent: palette.accent,
+      accentStrong: palette.accentStrong,
+      accentSoft: withAlpha(accentSpectrum[themeName === 'dark' ? 5 : 2], themeName === 'dark' ? 0.24 : 0.16),
       text: palette.text,
-      secondary: basePalette[themeName === 'dark' ? 9 : 6],
-      avatarText: palette.accentForeground,
-      shadow: withAlpha(palette.tint, themeName === 'dark' ? 0.25 : 0.18),
-      quoteBackground: withAlpha(
-        accentSpectrum[themeName === 'dark' ? 7 : 2],
-        themeName === 'dark' ? 0.36 : 0.18
-      ),
-      quoteText: accentSpectrum[themeName === 'dark' ? 10 : 4],
+      secondary: palette.subtleText,
+      muted: palette.mutedText,
+      avatarBackground: palette.surfaceAlt,
+      avatarBorder: withAlpha(palette.text, themeName === 'dark' ? 0.18 : 0.08),
+      avatarText: palette.text,
+      shadow: palette.elevatedShadow,
+      headerBackground: palette.surface,
+      headerShadow: palette.shadow,
+      iconBackground: palette.surface,
+      iconColor: palette.text,
+      quoteBackground: palette.surfaceAlt,
+      quoteText: palette.accentStrong,
     };
-  }, [basePalette, palette, themeName]);
+  }, [palette, themeName]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -302,15 +305,27 @@ export default function HomeScreen() {
         zIndex={10}
         onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
       >
-        <YStack
-          paddingTop={headerPaddingTop}
-          paddingBottom={BrandSpacing.elementGap / 2}
-          paddingHorizontal={BrandSpacing.gutter}
-          gap="$3"
-        >
-          <XStack ai="center" jc="space-between">
+        <YStack paddingTop={headerPaddingTop} paddingHorizontal={BrandSpacing.gutter} paddingBottom={BrandSpacing.elementGap / 2}>
+          <XStack
+            backgroundColor={colors.headerBackground}
+            borderRadius={20}
+            paddingHorizontal={BrandSpacing.elementGap}
+            paddingVertical={BrandSpacing.elementGap / 1.5}
+            ai="center"
+            jc="space-between"
+            shadowColor={colors.headerShadow}
+            shadowRadius={28}
+          >
             <XStack ai="center" gap="$3">
-              <Avatar size="$4" circular bg={colors.accentSoft} ai="center" jc="center">
+              <Avatar
+                size="$5"
+                circular
+                bg={colors.avatarBackground}
+                borderWidth={1}
+                borderColor={colors.avatarBorder}
+                ai="center"
+                jc="center"
+              >
                 <Avatar.Image src={firebaseAuth?.currentUser?.photoURL ?? undefined} />
                 <Avatar.Fallback ai="center" jc="center">
                   <Text color={colors.avatarText} fontWeight="700" textAlign="center">
@@ -319,8 +334,10 @@ export default function HomeScreen() {
                 </Avatar.Fallback>
               </Avatar>
               <YStack>
-                <Text fontSize={12} color={colors.secondary}>Namaste,</Text>
-                <Text fontSize={16} fontFamily={BrandTypography.tagline.fontFamily} color={colors.text}>
+                <Text fontSize={12} color={colors.secondary}>
+                  Namaste,
+                </Text>
+                <Text fontSize={18} fontFamily={BrandTypography.tagline.fontFamily} fontWeight="700" color={colors.text}>
                   {firstName}
                 </Text>
               </YStack>
@@ -330,18 +347,23 @@ export default function HomeScreen() {
               <Button
                 size="$3"
                 circular
-                backgroundColor={colors.accent}
+                backgroundColor={colors.accentStrong}
+                shadowColor={colors.headerShadow}
+                shadowRadius={20}
                 onPress={() => Alert.alert('SOS', 'Family assistance is on the way.')}
               >
-                <Text color="#fff" fontWeight="700">
+                <Text color={palette.accentForeground} fontWeight="700">
                   SOS
                 </Text>
               </Button>
               <Button
                 size="$3"
                 circular
-                variant="outlined"
+                backgroundColor={colors.iconBackground}
+                color={colors.iconColor}
                 icon={Bell}
+                shadowColor={colors.headerShadow}
+                shadowRadius={18}
                 onPress={() => router.push('/notifications')}
               />
             </XStack>
@@ -387,39 +409,37 @@ export default function HomeScreen() {
       >
         {showCreateCTA && (
           <ParivarCtaCard
+            marginTop={BrandSpacing.elementGap}
             themeName={themeName}
             title="You haven't created a Parivar yet."
             description="Start by creating your Parivar to add members, stories, and rituals in one joyful place."
             buttonLabel={createButtonLabel}
             onPress={handleCreateParivar}
             backgroundColor={colors.card}
-            borderColor={colors.border}
             shadowColor={colors.shadow}
             descriptionColor={colors.secondary}
+            buttonBackgroundColor={colors.accent}
+            buttonTextColor="#fff"
           />
         )}
 
         {showJoinCTA && (
           <ParivarCtaCard
+            marginTop={BrandSpacing.elementGap}
             themeName={themeName}
             title="Join your Parivar to continue."
             description="You’ve created a Parivar workspace. Join it to collaborate with your loved ones."
             buttonLabel="Join Parivar"
             onPress={handleJoinParivar}
             backgroundColor={colors.card}
-            borderColor={colors.border}
             shadowColor={colors.shadow}
             descriptionColor={colors.secondary}
+            buttonBackgroundColor={colors.accent}
+            buttonTextColor="#fff"
           />
         )}
 
-        <Card
-          padding="$4"
-          bordered
-          borderColor={colors.border}
-          backgroundColor={colors.quoteBackground}
-          gap="$2"
-        >
+        <Card padding="$4" backgroundColor={colors.quoteBackground} gap="$2" shadowColor={colors.shadow} shadowRadius={16}>
           <Text textAlign="center" color={colors.accent} fontWeight="600" fontSize={13}>
             Parivar Bonding
           </Text>

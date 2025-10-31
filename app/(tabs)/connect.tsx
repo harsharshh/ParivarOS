@@ -5,7 +5,7 @@ import { Smile, Send, MessageCircle } from '@tamagui/lucide-icons';
 import { Button, Input, Text, XStack, YStack } from 'tamagui';
 
 import { ThemePreferenceContext } from '@/app/_layout';
-import { ThemeColors, accentPalette, darkPalette, lightPalette } from '@/constants/tamagui-theme';
+import { ThemeColors } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography } from '@/design-system';
 import { withAlpha } from '@/utils/color';
 
@@ -48,8 +48,6 @@ const initialMessages: ChatMessage[] = [
 export default function ConnectScreen() {
   const { themeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
-  const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
-  const accentSpectrum = accentPalette[themeName];
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [draft, setDraft] = useState('');
@@ -59,17 +57,20 @@ export default function ConnectScreen() {
   const colors = useMemo(
     () => ({
       background: palette.background,
-      card: basePalette[themeName === 'dark' ? 3 : 1],
-      border: basePalette[themeName === 'dark' ? 6 : 7],
+      card: palette.surface,
+      border: palette.border,
       text: palette.text,
-      secondary: basePalette[themeName === 'dark' ? 9 : 6],
-      bubbleOwn: withAlpha(accentSpectrum[themeName === 'dark' ? 8 : 4], themeName === 'dark' ? 0.34 : 0.22),
-      bubbleOwnText: themeName === 'dark' ? palette.accentForeground : basePalette[10],
-      bubbleOther: basePalette[themeName === 'dark' ? 5 : 0],
-      bubbleOtherBorder: basePalette[themeName === 'dark' ? 7 : 2],
-      timestamp: basePalette[themeName === 'dark' ? 8 : 5],
+      secondary: palette.subtleText,
+      bubbleOwn: withAlpha(palette.accent, themeName === 'dark' ? 0.32 : 0.2),
+      bubbleOwnText: palette.accentForeground,
+      bubbleOther: palette.surface,
+      timestamp: palette.mutedText,
+      shadow: palette.shadow,
+      headerBackground: palette.surface,
+      iconBackground: palette.surface,
+      iconColor: palette.text,
     }),
-    [accentSpectrum, basePalette, palette, themeName]
+    [palette, themeName]
   );
 
   useEffect(() => {
@@ -109,26 +110,43 @@ export default function ConnectScreen() {
         zIndex={10}
         onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
       >
-        <YStack
-          paddingTop={insets.top + BrandSpacing.elementGap / 2}
-          paddingBottom={BrandSpacing.elementGap / 2}
-          paddingHorizontal={BrandSpacing.gutter}
-          gap="$2"
-        >
-          <XStack ai="center" gap="$3">
-            <Button size="$3" circular variant="outlined" borderColor={colors.border} icon={MessageCircle} disabled />
-            <Text
-              fontFamily={BrandTypography.tagline.fontFamily}
-              fontSize={22}
-              fontWeight="700"
-              color={colors.text}
+        <YStack paddingTop={insets.top + BrandSpacing.elementGap / 2} paddingHorizontal={BrandSpacing.gutter} paddingBottom={BrandSpacing.elementGap / 2}>
+          <XStack
+            backgroundColor={colors.headerBackground}
+            borderRadius={20}
+            paddingHorizontal={BrandSpacing.elementGap}
+            paddingVertical={BrandSpacing.elementGap / 1.5}
+            gap="$3"
+            ai="center"
+            shadowColor={colors.shadow}
+            shadowRadius={26}
+          >
+            <XStack
+              width={44}
+              height={44}
+              borderRadius={22}
+              ai="center"
+              jc="center"
+              backgroundColor={colors.iconBackground}
+              shadowColor={colors.shadow}
+              shadowRadius={14}
             >
-              Parivar Commons Chat
-            </Text>
+              <MessageCircle color={colors.iconColor} size={18} />
+            </XStack>
+            <YStack flex={1} gap="$1">
+              <Text
+                fontFamily={BrandTypography.tagline.fontFamily}
+                fontSize={20}
+                fontWeight="700"
+                color={colors.text}
+              >
+                Parivar Commons Chat
+              </Text>
+              <Text color={colors.secondary} fontSize={14}>
+                A global lounge for every connected family. Share updates, plans, and love with the whole parivar.
+              </Text>
+            </YStack>
           </XStack>
-          <Text color={colors.secondary} fontSize={14}>
-            A global lounge for every connected family. Share updates, plans, and love with the whole parivar.
-          </Text>
         </YStack>
       </YStack>
 
@@ -148,8 +166,6 @@ export default function ConnectScreen() {
             const alignment = message.isOwn ? 'flex-end' : 'flex-start';
             const bubbleBg = message.isOwn ? colors.bubbleOwn : colors.bubbleOther;
             const bubbleText = message.isOwn ? colors.bubbleOwnText : colors.text;
-            const borderColor = message.isOwn ? colors.bubbleOwn : colors.bubbleOtherBorder;
-
             return (
               <XStack key={message.id} justifyContent={alignment}>
                 <YStack
@@ -157,9 +173,9 @@ export default function ConnectScreen() {
                   padding="$3"
                   borderRadius="$6"
                   backgroundColor={bubbleBg}
-                  borderWidth={message.isOwn ? 0 : 1}
-                  borderColor={borderColor}
                   gap="$1"
+                  shadowColor={message.isOwn ? colors.shadow : 'transparent'}
+                  shadowRadius={message.isOwn ? 10 : 0}
                 >
                   <Text color={bubbleText} fontWeight="600" fontSize={13}>
                     {message.author}
@@ -182,16 +198,14 @@ export default function ConnectScreen() {
         paddingBottom={Platform.OS === 'ios' ? BrandSpacing.elementGap : BrandSpacing.stackGap / 2}
         paddingTop={BrandSpacing.elementGap}
         backgroundColor={colors.background}
-        borderTopWidth={1}
-        borderTopColor={colors.border}
       >
         <XStack gap="$3" ai="center">
           <Button
             size="$4"
-            variant="outlined"
-            borderColor={colors.border}
-            onPress={() => Alert.alert('Emojis', 'Emoji picker coming soon!')}
+            backgroundColor={colors.card}
+            color={colors.text}
             icon={Smile}
+            onPress={() => Alert.alert('Emojis', 'Emoji picker coming soon!')}
           />
           <Input
             flex={1}
@@ -209,6 +223,7 @@ export default function ConnectScreen() {
             onPress={handleSend}
             disabled={!draft.trim()}
             backgroundColor={colors.bubbleOwn}
+            color={colors.bubbleOwnText}
             icon={Send}
           />
         </XStack>

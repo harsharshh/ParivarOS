@@ -4,7 +4,7 @@ import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
 import { Card, Text, XStack, YStack } from 'tamagui';
 
 import { ThemePreferenceContext } from '@/app/_layout';
-import { ThemeColors, darkPalette, lightPalette } from '@/constants/tamagui-theme';
+import { ThemeColors } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography, StatsCard } from '@/design-system';
 import { withAlpha } from '@/utils/color';
 
@@ -226,20 +226,18 @@ export default function QuickStatDetailScreen() {
 
   const { themeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
-  const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
 
   const colors = useMemo(
     () => ({
       background: palette.background,
       text: palette.text,
-      secondary: basePalette[themeName === 'dark' ? 8 : 6],
-      muted: basePalette[themeName === 'dark' ? 6 : 5],
-      cardBackground: basePalette[themeName === 'dark' ? 2 : 1],
-      cardBorder: basePalette[themeName === 'dark' ? 4 : 3],
-      highlightBackground: withAlpha(palette.tint, themeName === 'dark' ? 0.22 : 0.14),
-      highlightBorder: basePalette[themeName === 'dark' ? 5 : 4],
+      secondary: palette.subtleText,
+      muted: palette.mutedText,
+      cardBackground: palette.surface,
+      highlightBackground: withAlpha(palette.accent, themeName === 'dark' ? 0.28 : 0.18),
+      shadow: palette.shadow,
     }),
-    [basePalette, palette.background, palette.text, palette.tint, themeName]
+    [palette, themeName]
   );
 
   if (!config) {
@@ -272,8 +270,9 @@ export default function QuickStatDetailScreen() {
             padding="$4"
             borderRadius="$8"
             backgroundColor={colors.highlightBackground}
-            borderColor={colors.highlightBorder}
             gap="$2"
+            shadowColor={colors.shadow}
+            shadowRadius={18}
           >
             <Text color={colors.text} fontSize={12} textTransform="uppercase" letterSpacing={0.6}>
               {config.hero.label}
@@ -318,8 +317,9 @@ export default function QuickStatDetailScreen() {
                 padding="$4"
                 borderRadius="$8"
                 backgroundColor={colors.cardBackground}
-                borderColor={colors.cardBorder}
                 gap="$2"
+                shadowColor={colors.shadow}
+                shadowRadius={16}
               >
                 <Text fontWeight="600" fontSize={15} color={colors.text}>
                   {area.title}
@@ -340,8 +340,9 @@ export default function QuickStatDetailScreen() {
             padding="$4"
             borderRadius="$8"
             backgroundColor={colors.cardBackground}
-            borderColor={colors.cardBorder}
             gap="$3"
+            shadowColor={colors.shadow}
+            shadowRadius={16}
           >
             <YStack gap="$2">
               {config.suggestions.map((suggestion) => (

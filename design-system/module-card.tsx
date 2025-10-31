@@ -22,33 +22,33 @@ export function ModuleCard({ title, subtitle, description, onPress, layout = 'ha
 
   const colors = useMemo(
     () => ({
-      background: isDark ? withAlpha(accentSpectrum[4], 0.3) : withAlpha(accentSpectrum[1], 0.12),
-      border: isDark ? withAlpha(accentSpectrum[6], 0.55) : withAlpha(accentSpectrum[3], 0.32),
-      hoverBorder: accentSpectrum[isDark ? 9 : 4],
-      title: isDark ? accentSpectrum[8] : accentSpectrum[4],
-      subtitle: isDark ? withAlpha(accentSpectrum[10], 0.95) : withAlpha(palette.text, 0.85),
-      description: isDark ? withAlpha(accentSpectrum[10], 0.82) : withAlpha(palette.text, 0.68),
-      shadow: withAlpha(accentSpectrum[isDark ? 7 : 5], 0.18),
+      background: palette.surface,
+      hoverBackground: isDark
+        ? withAlpha(palette.accentStrong, 0.18)
+        : withAlpha(palette.accent, 0.16),
+      title: palette.text,
+      subtitle: palette.subtleText,
+      description: palette.mutedText,
+      shadow: palette.shadow,
+      accent: palette.accent,
     }),
-    [accentSpectrum, isDark, palette.accentForeground, palette.text, palette.tint]
+    [isDark, palette]
   );
 
   const width = layout === 'half' ? '48%' : '100%';
 
   return (
     <Card
-      bordered
       padding="$4"
       borderRadius="$8"
       width={width}
       height={layout === 'half' ? 148 : undefined}
       minWidth={160}
       alignSelf="stretch"
-      borderColor={colors.border}
       backgroundColor={colors.background}
       shadowColor={colors.shadow}
       shadowRadius={18}
-      hoverStyle={{ borderColor: colors.hoverBorder }}
+      hoverStyle={{ backgroundColor: colors.hoverBackground }}
       pressStyle={{ scale: 0.98 }}
       onPress={onPress}
       disabled={!onPress}
@@ -66,7 +66,7 @@ export function ModuleCard({ title, subtitle, description, onPress, layout = 'ha
           </Text>
         </YStack>
         <YStack position="absolute" bottom="$0" right="$0" pointerEvents="none">
-          <ChevronRight size={18} color={colors.title} />
+          <ChevronRight size={18} color={colors.accent} />
         </YStack>
       </YStack>
     </Card>

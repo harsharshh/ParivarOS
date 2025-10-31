@@ -2,10 +2,10 @@ import { Compass } from '@tamagui/lucide-icons';
 import { useCallback, useContext, useMemo, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ThemePreferenceContext } from '@/app/_layout';
-import { ThemeColors, darkPalette, lightPalette } from '@/constants/tamagui-theme';
+import { ThemeColors } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography, ModuleCard, ParivarCtaCard, StatsCard } from '@/design-system';
 import { useParivarStatus } from '@/hooks/use-parivar-status';
 
@@ -92,7 +92,6 @@ const extendedModules = [
 export default function ExploreScreen() {
   const { themeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
-  const basePalette = themeName === 'dark' ? darkPalette : lightPalette;
   const insets = useSafeAreaInsets();
   const [headerHeight, setHeaderHeight] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -101,11 +100,16 @@ export default function ExploreScreen() {
   const colors = useMemo(
     () => ({
       background: palette.background,
+      card: palette.surface,
       text: palette.text,
-      accent: palette.tint,
-      secondary: basePalette[themeName === 'dark' ? 9 : 6],
+      accent: palette.accent,
+      secondary: palette.subtleText,
+      shadow: palette.shadow,
+      headerBackground: palette.surface,
+      iconBackground: palette.surface,
+      iconColor: palette.text,
     }),
-    [basePalette, palette, themeName]
+    [palette]
   );
 
   const ensureJoined = useCallback(() => {
@@ -158,21 +162,38 @@ export default function ExploreScreen() {
         zIndex={10}
         onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
       >
-        <YStack
-          paddingTop={insets.top + BrandSpacing.elementGap / 2}
-          paddingBottom={BrandSpacing.elementGap / 2}
-          paddingHorizontal={BrandSpacing.gutter}
-          gap="$2"
-        >
-          <XStack ai="center" gap="$3">
-            <Button size="$3" circular variant="outlined" borderColor={colors.accent} icon={Compass} disabled />
-            <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={20} color={colors.text} fontWeight="700">
-              Explore Parivar Networks
-            </Text>
+        <YStack paddingTop={insets.top + BrandSpacing.elementGap / 2} paddingHorizontal={BrandSpacing.gutter} paddingBottom={BrandSpacing.elementGap / 2}>
+          <XStack
+            backgroundColor={colors.headerBackground}
+            borderRadius={20}
+            paddingHorizontal={BrandSpacing.elementGap}
+            paddingVertical={BrandSpacing.elementGap / 1.5}
+            ai="center"
+            gap="$3"
+            shadowColor={colors.shadow}
+            shadowRadius={26}
+          >
+            <XStack
+              width={44}
+              height={44}
+              borderRadius={22}
+              ai="center"
+              jc="center"
+              backgroundColor={colors.iconBackground}
+              shadowColor={colors.shadow}
+              shadowRadius={14}
+            >
+              <Compass color={colors.iconColor} size={18} />
+            </XStack>
+            <YStack flex={1} gap="$1">
+              <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={20} color={colors.text} fontWeight="700">
+                Explore Parivar Networks
+              </Text>
+              <Text color={colors.secondary} fontSize={14}>
+                Discover insights and shared spaces across every connected family.
+              </Text>
+            </YStack>
           </XStack>
-          <Text color={colors.secondary} fontSize={14}>
-            Discover insights and shared spaces across every connected family.
-          </Text>
         </YStack>
       </YStack>
 
@@ -214,15 +235,17 @@ export default function ExploreScreen() {
       >
         {requiresJoin && (
           <ParivarCtaCard
+            marginTop={BrandSpacing.elementGap}
             themeName={themeName}
             title="Join your extended Parivar."
             description="Link with your loved ones to see cross-family stats, celebrations, and shared stories."
             buttonLabel="Join Parivar"
             onPress={handleJoinParivar}
             backgroundColor={colors.card}
-            borderColor={colors.border}
-            shadowColor={colors.accent}
+            // shadowColor={colors.accent}
             descriptionColor={colors.secondary}
+            buttonBackgroundColor={colors.accent}
+            buttonTextColor="#fff"
           />
         )}
 

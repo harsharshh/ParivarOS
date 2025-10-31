@@ -21,34 +21,33 @@ export function StatsCard({ title, value, description, onPress, layout = 'half' 
 
   const colors = useMemo(
     () => ({
-      background: isDark ? withAlpha(accentSpectrum[4], 0.26) : withAlpha(accentSpectrum[1], 0.12),
-      border: isDark ? withAlpha(accentSpectrum[6], 0.52) : withAlpha(accentSpectrum[3], 0.32),
-      hoverBorder: isDark ? accentSpectrum[9] : accentSpectrum[4],
-      primary: isDark ? accentSpectrum[8] : accentSpectrum[4],
-      secondary: isDark ? withAlpha(accentSpectrum[10], 0.9) : withAlpha(palette.text, 0.6),
-      label: isDark ? accentSpectrum[11] : withAlpha(palette.text, 0.72),
-      shadow: withAlpha(accentSpectrum[isDark ? 7 : 5], 0.22),
+      background: palette.surface,
+      primary: isDark ? palette.accentStrong : palette.accent,
+      secondary: palette.subtleText,
+      label: palette.mutedText,
+      hoverBackground: isDark
+        ? withAlpha(palette.accentStrong, 0.22)
+        : withAlpha(palette.accent, 0.18),
+      shadow: palette.elevatedShadow,
     }),
-    [accentSpectrum, isDark, palette.accentForeground, palette.text, palette.tint]
+    [isDark, palette]
   );
 
   const width = layout === 'half' ? '48%' : '100%';
 
   return (
     <Card
-      bordered
       padding="$4"
       borderRadius="$8"
       width={width}
       flexShrink={0}
       alignSelf="stretch"
       height={132}
-      borderColor={colors.border}
       backgroundColor={colors.background}
       shadowColor={colors.shadow}
       shadowRadius={18}
       hoverStyle={{
-        borderColor: colors.hoverBorder,
+        backgroundColor: colors.hoverBackground,
       }}
       pressStyle={{
         scale: 0.98,
