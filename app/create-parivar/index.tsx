@@ -36,6 +36,21 @@ import {
   getCreateParivarProgress,
   saveCreateParivarProgress,
 } from '@/utils/create-parivar-storage';
+import {
+  MemberFormState,
+  relationshipOptions,
+  genderOptions,
+  bloodGroupOptions,
+  medicalOptions,
+  defaultMedicalSelections,
+  defaultPhoneCountryCode,
+  createEmptyMemberForm,
+  parseDateString,
+  formatDate,
+  generateMemberId,
+  extractLocalPhone,
+  sanitizeFamilyMembers,
+} from '@/utils/member-form';
 
 type UserProfile = {
   name?: string;
@@ -44,36 +59,6 @@ type UserProfile = {
   gender?: string;
   bloodGroup?: string;
 };
-
-type MemberFormState = {
-  name: string;
-  relationship: string;
-  gender: string;
-  bloodGroup: string;
-  dob: string;
-  dobDate: Date | null;
-  medicalConditions: string;
-  phoneNumber: string;
-};
-
-const relationshipOptions = [
-  'Spouse',
-  'Child',
-  'Parent',
-  'Sibling',
-  'Grandparent',
-  'Grandchild',
-  'Relative',
-  'Friend',
-  'Caregiver',
-  'Other',
-];
-
-const genderOptions = ['Female', 'Male', 'Non-binary', 'Prefer not to say'];
-const bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-const medicalOptions = ['None', 'Diabetes', 'Hypertension', 'Asthma', 'Allergies', 'Heart Conditions'];
-const defaultMedicalSelections = medicalOptions[0];
-const defaultPhoneCountryCode = '+91';
 
 const steps = [
   {
@@ -86,29 +71,6 @@ const steps = [
   },
 ];
 
-function createEmptyMemberForm(): MemberFormState {
-  return {
-    name: '',
-    relationship: '',
-    gender: '',
-    bloodGroup: '',
-    dob: '',
-    dobDate: null,
-    medicalConditions: defaultMedicalSelections,
-    phoneNumber: '',
-  };
-}
-
-function formatDate(date: Date) {
-  const adjusted = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
-  return adjusted.toISOString().split('T')[0];
-}
-
-function parseDateString(value: string): Date {
-  const [year, month, day] = value.split('-').map(Number);
-  return new Date(year, (month ?? 1) - 1, day ?? 1);
-}
-
 function getAgeFromDate(value?: string) {
   if (!value) return '';
   const birthDate = parseDateString(value);
@@ -119,23 +81,6 @@ function getAgeFromDate(value?: string) {
     age -= 1;
   }
   return age;
-}
-
-function generateMemberId() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-function extractLocalPhone(value?: string) {
-  if (!value) {
-    return '';
-  }
-  const normalized = value.replace(/\s+/g, '');
-  const withoutCode = normalized.startsWith(defaultPhoneCountryCode)
-    ? normalized.slice(defaultPhoneCountryCode.length)
-    : normalized.startsWith('+')
-      ? normalized.slice(1)
-      : normalized;
-  return withoutCode.replace(/\D/g, '');
 }
 
 function mapDraftMembers(value: unknown): CreateParivarMemberDraft[] | undefined {
@@ -384,45 +329,6 @@ export default function CreateParivarScreen() {
       phoneNumber: user.phoneNumber ?? undefined,
     };
   }, [user, userProfile]);
-
-  const sanitizeFamilyMembers = (members: CreateParivarMemberDraft[]) =>
-    members.map((member) => {
-      const payload: Record<string, unknown> = {
-        id: member.id,
-        name: member.name,
-        relationship: member.relationship ?? 'Family',
-      };
-      if (member.gender) {
-        payload.gender = member.gender;
-      }
-      if (member.bloodGroup) {
-        payload.bloodGroup = member.bloodGroup;
-      }
-      if (member.dob) {
-        payload.dob = member.dob;
-      }
-
-      const normalizedMedical =
-        Array.isArray(member.medicalConditions)
-          ? member.medicalConditions.filter((value) => !!value)
-          : typeof member.medicalConditions === 'string'
-            ? member.medicalConditions
-                .split(',')
-                .map((value) => value.trim())
-                .filter((value) => value.length > 0)
-            : undefined;
-      if (normalizedMedical && normalizedMedical.length > 0) {
-        payload.medicalConditions = normalizedMedical;
-      }
-
-      if (member.userId) {
-        payload.userId = member.userId;
-      }
-      if (member.phoneNumber) {
-        payload.phoneNumber = member.phoneNumber;
-      }
-      return payload;
-    });
 
   const ensureOwnerMember = useCallback(
     (incoming: CreateParivarMemberDraft[]) => {
