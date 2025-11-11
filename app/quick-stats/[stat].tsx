@@ -6,6 +6,7 @@ import { Card, Text, XStack, YStack } from 'tamagui';
 import { ThemePreferenceContext } from '@/app/_layout';
 import { ThemeColors } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography, StatsCard } from '@/design-system';
+import { responsiveFont } from '@/utils/responsive-font';
 import { withAlpha } from '@/utils/color';
 
 type QuickStatMetric = {
@@ -263,7 +264,7 @@ export default function QuickStatDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         <YStack gap="$3">
-          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
+          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(16)} color={colors.text}>
             At a glance
           </Text>
           <Card
@@ -274,23 +275,23 @@ export default function QuickStatDetailScreen() {
             shadowColor={colors.shadow}
             shadowRadius={18}
           >
-            <Text color={colors.text} fontSize={12} textTransform="uppercase" letterSpacing={0.6}>
+            <Text color={colors.text} fontSize={responsiveFont(12)} textTransform="uppercase" letterSpacing={0.6}>
               {config.hero.label}
             </Text>
-            <Text color={colors.text} fontSize={32} fontWeight="700">
+            <Text color={colors.text} fontSize={responsiveFont(32)} fontWeight="700">
               {config.hero.value}
             </Text>
-            <Text color={colors.secondary} fontSize={13}>
+            <Text color={colors.secondary} fontSize={responsiveFont(13)}>
               {config.hero.caption}
             </Text>
-            <Text color={colors.secondary} fontSize={13}>
+            <Text color={colors.secondary} fontSize={responsiveFont(13)}>
               {config.overview}
             </Text>
           </Card>
         </YStack>
 
         <YStack gap="$3">
-          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
+          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(16)} color={colors.text}>
             Key metrics
           </Text>
           <XStack gap="$3" flexWrap="wrap">
@@ -307,7 +308,7 @@ export default function QuickStatDetailScreen() {
         </YStack>
 
         <YStack gap="$3">
-          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
+          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(16)} color={colors.text}>
             Focus areas
           </Text>
           <YStack gap="$3">
@@ -321,10 +322,14 @@ export default function QuickStatDetailScreen() {
                 shadowColor={colors.shadow}
                 shadowRadius={16}
               >
-                <Text fontWeight="600" fontSize={15} color={colors.text}>
+                <Text fontWeight="600" fontSize={responsiveFont(15)} color={colors.text}>
                   {area.title}
                 </Text>
-                <Text color={colors.secondary} fontSize={13} lineHeight={18}>
+                <Text
+                  color={colors.secondary}
+                  fontSize={responsiveFont(13)}
+                  lineHeight={responsiveFont(18, { minMultiplier: 0.9, maxMultiplier: 1.05 })}
+                >
                   {area.description}
                 </Text>
               </Card>
@@ -333,7 +338,7 @@ export default function QuickStatDetailScreen() {
         </YStack>
 
         <YStack gap="$3">
-          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
+          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(16)} color={colors.text}>
             Recommended next steps
           </Text>
           <Card
@@ -346,12 +351,17 @@ export default function QuickStatDetailScreen() {
           >
             <YStack gap="$2">
               {config.suggestions.map((suggestion) => (
-                <Text key={suggestion} color={colors.secondary} fontSize={13} lineHeight={18}>
+                <Text
+                  key={suggestion}
+                  color={colors.secondary}
+                  fontSize={responsiveFont(13)}
+                  lineHeight={responsiveFont(18, { minMultiplier: 0.9, maxMultiplier: 1.05 })}
+                >
                   {`\u2022 ${suggestion}`}
                 </Text>
               ))}
             </YStack>
-            <Text color={colors.muted} fontSize={12}>
+            <Text color={colors.muted} fontSize={responsiveFont(12)}>
               Tip: periodic check-ins keep everyone aligned and nurtured.
             </Text>
           </Card>

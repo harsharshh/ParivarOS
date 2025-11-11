@@ -26,9 +26,11 @@ import {
 import type { IconProps } from '@tamagui/lucide-icons';
 import { useMemo } from 'react';
 import { Card, Text, YStack, useThemeName } from 'tamagui';
+import { Platform } from 'react-native';
 
 import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
 import { withAlpha } from '@/utils/color';
+import { responsiveFont } from '@/utils/responsive-font';
 
 export type ModuleCardProps = {
   title: string;
@@ -104,12 +106,13 @@ export function ModuleCard({ title, subtitle, description, onPress, layout = 'ha
       padding="$4"
       borderRadius="$8"
       width={width}
-      height={layout === 'half' ? 148 : undefined}
+      minHeight={layout === 'half' ? 148 : undefined}
       minWidth={160}
       alignSelf="stretch"
       backgroundColor={colors.background}
       shadowColor={colors.shadow}
       shadowRadius={18}
+      {...(Platform.OS === 'android' ? { elevation: 4 } : {})}
       hoverStyle={{ backgroundColor: colors.hoverBackground }}
       pressStyle={{ scale: 0.98 }}
       onPress={onPress}
@@ -128,19 +131,25 @@ export function ModuleCard({ title, subtitle, description, onPress, layout = 'ha
           jc="center"
           shadowColor={colors.iconGlow}
           shadowRadius={18}
+          {...(Platform.OS === 'android' ? { elevation: 3 } : {})}
           pointerEvents="none"
         >
           <IconComponent color={colors.accent} size={18} />
         </YStack>
 
-        <YStack gap="$2" paddingTop="36px">
-          <Text color={colors.title} fontSize={18} fontWeight="700">
+        <YStack gap="$2" paddingTop="36px" flexShrink={1}>
+          <Text color={colors.title} fontSize={responsiveFont(18)} fontWeight="700">
             {subtitle}
           </Text>
-          <Text color={colors.subtitle} fontSize={14} fontWeight="600">
+          <Text color={colors.subtitle} fontSize={responsiveFont(14)} fontWeight="600">
             {title}
           </Text>
-          <Text color={colors.description} fontSize={12} lineHeight={16}>
+          <Text
+            color={colors.description}
+            fontSize={responsiveFont(12)}
+            lineHeight={responsiveFont(16, { minMultiplier: 0.9, maxMultiplier: 1.05 })}
+            flexShrink={1}
+          >
             {description}
           </Text>
         </YStack>

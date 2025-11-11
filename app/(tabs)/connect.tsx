@@ -8,6 +8,7 @@ import { ThemePreferenceContext } from '@/app/_layout';
 import { ThemeColors } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography } from '@/design-system';
 import { withAlpha } from '@/utils/color';
+import { responsiveFont } from '@/utils/responsive-font';
 
 type ChatMessage = {
   id: string;
@@ -120,6 +121,7 @@ export default function ConnectScreen() {
             ai="center"
             shadowColor={colors.shadow}
             shadowRadius={26}
+            {...(Platform.OS === 'android' ? { elevation: 8 } : {})}
           >
             <XStack
               width={44}
@@ -130,19 +132,20 @@ export default function ConnectScreen() {
               backgroundColor={colors.iconBackground}
               shadowColor={colors.shadow}
               shadowRadius={14}
+              {...(Platform.OS === 'android' ? { elevation: 4 } : {})}
             >
               <MessageCircle color={colors.iconColor} size={18} />
             </XStack>
             <YStack flex={1} gap="$1">
               <Text
                 fontFamily={BrandTypography.tagline.fontFamily}
-                fontSize={20}
+                fontSize={responsiveFont(20)}
                 fontWeight="700"
                 color={colors.text}
               >
                 Connect+
               </Text>
-              <Text color={colors.secondary} fontSize={14}>
+              <Text color={colors.secondary} fontSize={responsiveFont(14)}>
                 Share updates, plans, and love with the whole parivar.
               </Text>
             </YStack>
@@ -177,13 +180,13 @@ export default function ConnectScreen() {
                   shadowColor={message.isOwn ? colors.shadow : 'transparent'}
                   shadowRadius={message.isOwn ? 10 : 0}
                 >
-                  <Text color={bubbleText} fontWeight="600" fontSize={13}>
+                  <Text color={bubbleText} fontWeight="600" fontSize={responsiveFont(13)}>
                     {message.author}
                   </Text>
-                  <Text color={bubbleText} fontSize={14}>
+                  <Text color={bubbleText} fontSize={responsiveFont(14)}>
                     {message.content}
                   </Text>
-                  <Text color={colors.timestamp} fontSize={11} textAlign="right">
+                  <Text color={colors.timestamp} fontSize={responsiveFont(11)} textAlign="right">
                     {message.timestamp}
                   </Text>
                 </YStack>

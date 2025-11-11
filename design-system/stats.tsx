@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import { Card, Text, YStack, useThemeName } from 'tamagui';
+import { Platform } from 'react-native';
 
 import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
 import { withAlpha } from '@/utils/color';
+import { responsiveFont } from '@/utils/responsive-font';
 
 export type StatsCardProps = {
   title: string;
@@ -42,10 +44,11 @@ export function StatsCard({ title, value, description, onPress, layout = 'half' 
       width={width}
       flexShrink={0}
       alignSelf="stretch"
-      height={132}
+      minHeight={132}
       backgroundColor={colors.background}
       shadowColor={colors.shadow}
       shadowRadius={18}
+      {...(Platform.OS === 'android' ? { elevation: 4 } : {})}
       hoverStyle={{
         backgroundColor: colors.hoverBackground,
       }}
@@ -56,13 +59,17 @@ export function StatsCard({ title, value, description, onPress, layout = 'half' 
       disabled={!onPress}
     >
       <YStack gap="$2" flex={1} justifyContent="space-between">
-        <Text color={colors.label} fontSize={12} textTransform="uppercase" letterSpacing={0.6}>
+        <Text color={colors.label} fontSize={responsiveFont(12)} textTransform="uppercase" letterSpacing={0.6}>
           {title}
         </Text>
-        <Text color={colors.primary} fontSize={24} fontWeight="700">
+        <Text color={colors.primary} fontSize={responsiveFont(24)} fontWeight="700">
           {value}
         </Text>
-        <Text color={colors.secondary} fontSize={12} lineHeight={16}>
+        <Text
+          color={colors.secondary}
+          fontSize={responsiveFont(12)}
+          lineHeight={responsiveFont(16, { minMultiplier: 0.9, maxMultiplier: 1.05 })}
+        >
           {description}
         </Text>
       </YStack>

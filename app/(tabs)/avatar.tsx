@@ -1,7 +1,7 @@
 import { Edit3, LogOut, Moon, Settings, Shield, Sun, UsersRound } from '@tamagui/lucide-icons';
 import { doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'expo-router';
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState, useTransition } from 'react';
 import { Alert, ScrollView } from 'react-native';
 import { Avatar, Button, Card, ListItem, Separator, Switch, Text, XStack, YStack } from 'tamagui';
 
@@ -10,12 +10,15 @@ import { firebaseAuth, firebaseDb } from '@/config/firebase';
 import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography } from '@/design-system';
 import { withAlpha } from '@/utils/color';
+import { responsiveFont } from '@/utils/responsive-font';
 import { usePermissions } from '@/hooks/use-permissions';
 import { clearCreateParivarProgress } from '@/utils/create-parivar-storage';
 
 export default function AvatarScreen() {
   const router = useRouter();
   const { themeName, setThemeName } = useContext(ThemePreferenceContext);
+  const [isDarkPreferred, setIsDarkPreferred] = useState(themeName === 'dark');
+  const [, startThemeTransition] = useTransition();
   const palette = ThemeColors[themeName];
   const permissions = usePermissions();
 
@@ -65,6 +68,20 @@ export default function AvatarScreen() {
     void loadProfile();
   }, []);
 
+  useEffect(() => {
+    setIsDarkPreferred(themeName === 'dark');
+  }, [themeName]);
+
+  const handleThemeToggle = useCallback(
+    (value: boolean) => {
+      setIsDarkPreferred(value);
+      startThemeTransition(() => {
+        setThemeName(value ? 'dark' : 'light');
+      });
+    },
+    [setThemeName, startThemeTransition]
+  );
+
   const handleLogout = useCallback(() => {
     Alert.alert(
       'Log out of ParivarOS?',
@@ -107,7 +124,7 @@ export default function AvatarScreen() {
       }}
       showsVerticalScrollIndicator={false}
     >
-      <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={22} fontWeight='700' color={colors.text}>
+      <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(22)} fontWeight='700' color={colors.text}>
         My Profile
       </Text>
       <Card padding="$4" backgroundColor={colors.card} gap="$3" shadowColor={colors.shadow} shadowRadius={18}>
@@ -121,10 +138,10 @@ export default function AvatarScreen() {
             </Avatar.Fallback>
           </Avatar>
           <YStack flex={1}>
-            <Text fontSize={18} fontWeight="700" color={colors.text}>
+            <Text fontSize={responsiveFont(18)} fontWeight="700" color={colors.text}>
               {profileName}
             </Text>
-            <Text color={colors.secondary} fontSize={12}>
+            <Text color={colors.secondary} fontSize={responsiveFont(12)}>
               ParivarOS Member
             </Text>
           </YStack>
@@ -142,8 +159,8 @@ export default function AvatarScreen() {
             Theme
           </Text>
           <Switch
-            checked={themeName === 'dark'}
-            onCheckedChange={(value) => setThemeName(value ? 'dark' : 'light')}
+            checked={isDarkPreferred}
+            onCheckedChange={handleThemeToggle}
             backgroundColor={colors.thumbTrack}
             checkedStyle={{ backgroundColor: palette.accent }}
           >
@@ -198,7 +215,7 @@ export default function AvatarScreen() {
               <ListItem.Text numberOfLines={1} color={colors.text}>
                 Permissions & Access
               </ListItem.Text>
-              <Text color={colors.secondary} fontSize={12}>
+              <Text color={colors.secondary} fontSize={responsiveFont(12)}>
                 Camera {permissions.status.camera}, Mic {permissions.status.microphone}, Location {permissions.status.location}, Internet {permissions.status.internet}
               </Text>
             </YStack>

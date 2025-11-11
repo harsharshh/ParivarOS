@@ -9,6 +9,7 @@ import { Button, Card, Input, Text, XStack, YStack } from 'tamagui';
 
 import { firebaseAuth, firebaseDb } from '@/config/firebase';
 import { BrandLogoMark, BrandSpacing, BrandTypography } from '@/design-system';
+import { responsiveFont } from '@/utils/responsive-font';
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const medicalOptions = ['None', 'Diabetes', 'Hypertension', 'Asthma', 'Allergies', 'Heart Conditions'];
@@ -90,7 +91,7 @@ export default function OnboardingScreen() {
             <Text
               fontFamily={BrandTypography.logo.fontFamily}
               fontWeight={BrandTypography.logo.fontWeight}
-              fontSize={26}
+              fontSize={responsiveFont(26)}
               color="$color"
               textAlign="center"
             >
@@ -193,7 +194,7 @@ export default function OnboardingScreen() {
                     variant={active ? 'accent' : 'outlined'}
                     onPress={() => toggleMedical(option)}
                   >
-                    <Text fontSize={12}>{option}</Text>
+                    <Text fontSize={responsiveFont(12)}>{option}</Text>
                   </Button>
                 );
               })}

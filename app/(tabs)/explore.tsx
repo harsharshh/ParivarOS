@@ -1,12 +1,13 @@
 import { Compass } from '@tamagui/lucide-icons';
 import { useCallback, useContext, useMemo, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, View } from 'react-native';
+import { Alert, Platform, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ThemePreferenceContext } from '@/app/_layout';
 import { ThemeColors } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography, ModuleCard, ParivarCtaCard, StatsCard } from '@/design-system';
+import { responsiveFont } from '@/utils/responsive-font';
 import { useParivarStatus } from '@/hooks/use-parivar-status';
 
 const extendedStats = [
@@ -172,6 +173,7 @@ export default function ExploreScreen() {
             gap="$3"
             shadowColor={colors.shadow}
             shadowRadius={26}
+            {...(Platform.OS === 'android' ? { elevation: 8 } : {})}
           >
             <XStack
               width={44}
@@ -182,14 +184,15 @@ export default function ExploreScreen() {
               backgroundColor={colors.iconBackground}
               shadowColor={colors.shadow}
               shadowRadius={14}
+              {...(Platform.OS === 'android' ? { elevation: 4 } : {})}
             >
               <Compass color={colors.iconColor} size={18} />
             </XStack>
             <YStack flex={1} gap="$1">
-              <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={20} color={colors.text} fontWeight="700">
+              <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(20)} color={colors.text} fontWeight="700">
                 Parivar +
               </Text>
-              <Text color={colors.secondary} fontSize={14}>
+              <Text color={colors.secondary} fontSize={responsiveFont(14)}>
                 Discover every connected family.
               </Text>
             </YStack>
@@ -250,7 +253,7 @@ export default function ExploreScreen() {
         )}
 
         <YStack gap="$3">
-          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
+          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(16)} color={colors.text}>
             Quick Stats
           </Text>
           <XStack gap="$3" flexWrap="wrap">
@@ -268,7 +271,7 @@ export default function ExploreScreen() {
         </YStack>
 
         <YStack gap="$3">
-          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
+          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(16)} color={colors.text}>
             Extended Parivar
           </Text>
           <XStack gap="$3" flexWrap="wrap">

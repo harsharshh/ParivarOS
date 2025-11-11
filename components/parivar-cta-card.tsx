@@ -1,8 +1,10 @@
 import { memo } from 'react';
 import { Button, Card, Paragraph, Text, YStack } from 'tamagui';
+import { Platform } from 'react-native';
 
 import { FamilyCardIllustration } from '@/assets/images/family-card-illustration';
 import { ThemeColors } from '@/constants/tamagui-theme';
+import { responsiveFont } from '@/utils/responsive-font';
 
 type ParivarCtaCardProps = {
   title: string;
@@ -46,13 +48,14 @@ export const ParivarCtaCard = memo(function ParivarCtaCard({
       shadowColor={cardShadow}
       shadowRadius={20}
       marginTop={marginTop}
+      {...(Platform.OS === 'android' ? { elevation: 6 } : {})}
     >
       <YStack ai="center" gap="$3">
         <FamilyCardIllustration width={220} height={140} theme={themeName} />
-        <Text fontSize={18} fontFamily="Inter SemiBold" color={palette.text} textAlign="center">
+        <Text fontSize={responsiveFont(18)} fontFamily="Inter SemiBold" color={palette.text} textAlign="center">
           {title}
         </Text>
-        <Paragraph color={bodyText} fontSize={14} textAlign="center">
+        <Paragraph color={bodyText} fontSize={responsiveFont(14)} textAlign="center">
           {description}
         </Paragraph>
       </YStack>

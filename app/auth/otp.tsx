@@ -18,6 +18,7 @@ import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
 import { BrandLogoMark, BrandSpacing, BrandTypography } from '@/design-system';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { withAlpha } from '@/utils/color';
+import { responsiveFont } from '@/utils/responsive-font';
 
 const DEFAULT_DIAL_CODE = '+91';
 
@@ -288,7 +289,7 @@ export default function OtpAuthScreen() {
                 <Text
                   fontFamily={BrandTypography.logo.fontFamily}
                   fontWeight={BrandTypography.logo.fontWeight}
-                  fontSize={30}
+                  fontSize={responsiveFont(30)}
                   color={colors.text}
                 >
                   ParivarOS

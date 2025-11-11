@@ -27,6 +27,7 @@ import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography } from '@/design-system';
 import { FamilyTreeIllustration } from '@/design-system/illustrations';
 import { withAlpha } from '@/utils/color';
+import { responsiveFont } from '@/utils/responsive-font';
 import {
   CreateParivarMemberDraft,
   CreateParivarProgress,
@@ -923,7 +924,7 @@ export default function CreateParivarScreen() {
           padding={BrandSpacing.gutter}
           bg={colors.background}
         >
-          <Text textAlign="center" color={colors.text} fontSize={18} fontWeight="600">
+          <Text textAlign="center" color={colors.text} fontSize={responsiveFont(18)} fontWeight="600">
             Firebase is not configured.
           </Text>
           <Text textAlign="center" color={colors.muted} marginTop={12}>
@@ -947,7 +948,7 @@ export default function CreateParivarScreen() {
           padding={BrandSpacing.gutter}
           bg={colors.background}
         >
-          <Text textAlign="center" color={colors.text} fontSize={18} fontWeight="600">
+          <Text textAlign="center" color={colors.text} fontSize={responsiveFont(18)} fontWeight="600">
             You need to sign in first.
           </Text>
           <Text textAlign="center" color={colors.muted} marginTop={12}>
@@ -1004,7 +1005,7 @@ export default function CreateParivarScreen() {
               />
               <YStack flex={1} gap="$1">
                 <Text
-                  fontSize={22}
+                  fontSize={responsiveFont(22)}
                   fontFamily={BrandTypography.tagline.fontFamily}
                   fontWeight={BrandTypography.tagline.fontWeight}
                   color={colors.text}
@@ -1046,7 +1047,7 @@ export default function CreateParivarScreen() {
                         </YStack>
                         <Text
                           fontWeight={isActive ? '700' : '600'}
-                          fontSize={13}
+                          fontSize={responsiveFont(13)}
                           color={isActive ? colors.text : colors.muted}
                           textAlign="center"
                         >
@@ -1093,7 +1094,7 @@ export default function CreateParivarScreen() {
                   </YStack>
 
                   <YStack gap="$2">
-                    <Text fontSize={18} fontWeight="700" color={colors.text}>
+                    <Text fontSize={responsiveFont(18)} fontWeight="700" color={colors.text}>
                       Give your Parivar a heartfelt name
                     </Text>
                     <Text color={colors.muted}>
@@ -1121,11 +1122,11 @@ export default function CreateParivarScreen() {
                       placeholderTextColor={colors.muted}
                     />
                     {familyNameError ? (
-                      <Text color={palette.danger} fontSize={13}>
+                      <Text color={palette.danger} fontSize={responsiveFont(13)}>
                         {familyNameError}
                       </Text>
                     ) : (
-                      <Text color={colors.muted} fontSize={13}>
+                      <Text color={colors.muted} fontSize={responsiveFont(13)}>
                         Pick something unique. We&apos;ll make sure no one else is using it.
                       </Text>
                     )}
@@ -1162,7 +1163,7 @@ export default function CreateParivarScreen() {
                       placeholderTextColor={colors.muted}
                     />
                     {familyNameError ? (
-                      <Text color={palette.danger} fontSize={13}>
+                      <Text color={palette.danger} fontSize={responsiveFont(13)}>
                         {familyNameError}
                       </Text>
                     ) : null}
@@ -1187,7 +1188,7 @@ export default function CreateParivarScreen() {
                 ) : (
                   <XStack ai="center" jc="space-between">
                     <YStack>
-                      <Text fontSize={16} fontWeight="700" color={colors.text}>
+                      <Text fontSize={responsiveFont(16)} fontWeight="700" color={colors.text}>
                         {familyName}
                       </Text>
                       
@@ -1229,15 +1230,15 @@ export default function CreateParivarScreen() {
                             <UserRound size={22} color={colors.accent} />
                           </YStack>
                           <YStack gap="$1">
-                            <Text fontSize={16} fontWeight="700" color={colors.text}>
+                            <Text fontSize={responsiveFont(16)} fontWeight="700" color={colors.text}>
                               {member.name}
                             </Text>
-                            <Text fontSize={13} color={colors.muted}>
+                            <Text fontSize={responsiveFont(13)} color={colors.muted}>
                               {member.relationship || 'Family'}
                               {isOwner ? ' • You' : ''}
                             </Text>
                             {member.dob && (
-                              <Text fontSize={13} color={colors.muted}>
+                              <Text fontSize={responsiveFont(13)} color={colors.muted}>
                                 {getAgeFromDate(member.dob)} years old
                               </Text>
                             )}
@@ -1293,10 +1294,10 @@ export default function CreateParivarScreen() {
                 >
                   <YStack gap="$4">
                     <YStack gap="$2">
-                      <Text fontSize={18} fontWeight="700" color={colors.text}>
+                      <Text fontSize={responsiveFont(18)} fontWeight="700" color={colors.text}>
                         {editingMemberId ? 'Edit family member' : 'Add a family member'}
                       </Text>
-                      <Text color={colors.muted} fontSize={13}>
+                      <Text color={colors.muted} fontSize={responsiveFont(13)}>
                         Save each member and we&apos;ll keep everything synced.
                       </Text>
                     </YStack>
@@ -1486,7 +1487,7 @@ export default function CreateParivarScreen() {
                                   });
                                 }}
                               >
-                                <Text fontSize={12}>{option}</Text>
+                                <Text fontSize={responsiveFont(12)}>{option}</Text>
                               </Button>
                             );
                           })}
@@ -1525,7 +1526,7 @@ export default function CreateParivarScreen() {
                     {finalizing ? 'Wrapping up...' : 'Finish creating Parivar'}
                   </Text>
                 </Button>
-                <Text fontSize={13} color={colors.muted} textAlign="center">
+                <Text fontSize={responsiveFont(13)} color={colors.muted} textAlign="center">
                   You can always add more members or update details later.
                 </Text>
               </YStack>

@@ -2,7 +2,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Bell } from '@tamagui/lucide-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useContext, useMemo, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, View } from 'react-native';
+import { Alert, Platform, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Button, Card, Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -14,6 +14,7 @@ import { HomeNameplate } from '@/components/home-nameplate';
 import { useParivarStatus } from '@/hooks/use-parivar-status';
 import { withAlpha } from '@/utils/color';
 import { getCreateParivarProgress } from '@/utils/create-parivar-storage';
+import { responsiveFont } from '@/utils/responsive-font';
 
 const summaryCardDefinitions = [
   {
@@ -352,6 +353,7 @@ export default function HomeScreen() {
             jc="space-between"
             shadowColor={colors.headerShadow}
             shadowRadius={28}
+            {...(Platform.OS === 'android' ? { elevation: 8 } : {})}
           >
             <XStack ai="center" gap="$3">
               <Avatar
@@ -371,10 +373,10 @@ export default function HomeScreen() {
                 </Avatar.Fallback>
               </Avatar>
               <YStack>
-                <Text fontSize={12} color={colors.secondary}>
+                <Text fontSize={responsiveFont(12)} color={colors.secondary}>
                   Namaste,
                 </Text>
-                <Text fontSize={18} fontFamily={BrandTypography.tagline.fontFamily} fontWeight="700" color={colors.text}>
+                <Text fontSize={responsiveFont(18)} fontFamily={BrandTypography.tagline.fontFamily} fontWeight="700" color={colors.text}>
                   {firstName}
                 </Text>
               </YStack>
@@ -389,7 +391,11 @@ export default function HomeScreen() {
                 shadowRadius={20}
                 onPress={() => Alert.alert('SOS', 'Family assistance is on the way.')}
               >
-                <Text color={palette.accentForeground} fontWeight="700">
+                <Text
+                  color={palette.accentForeground}
+                  fontWeight="700"
+                  fontSize={responsiveFont(11, { min: 10, max: 13 })}
+                >
                   SOS
                 </Text>
               </Button>
@@ -480,20 +486,27 @@ export default function HomeScreen() {
           />
         )}
 
-        <Card padding="$4" backgroundColor={colors.quoteBackground} gap="$2" shadowColor={colors.shadow} shadowRadius={16}>
-          <Text textAlign="center" color={colors.accent} fontWeight="600" fontSize={13}>
+        <Card
+          padding="$4"
+          backgroundColor={colors.quoteBackground}
+          gap="$2"
+          shadowColor={colors.shadow}
+          shadowRadius={16}
+          {...(Platform.OS === 'android' ? { elevation: 2 } : {})}
+        >
+          <Text textAlign="center" color={colors.accent} fontWeight="600" fontSize={responsiveFont(13)}>
             Parivar Bonding
           </Text>
-          <Text textAlign="center" color={colors.quoteText} fontSize={13} lineHeight={18} italic>
+          <Text textAlign="center" color={colors.quoteText} fontSize={responsiveFont(13)} lineHeight={responsiveFont(18)} italic>
             “{bondingQuote.text}”
           </Text>
-          <Text textAlign="center" color={colors.secondary} fontSize={12}>
+          <Text textAlign="center" color={colors.secondary} fontSize={responsiveFont(12)}>
             — {bondingQuote.author}
           </Text>
         </Card>
 
       <YStack gap="$3">
-        <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
+        <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(16)} color={colors.text}>
           Quick Stats
         </Text>
         <XStack gap="$3" flexWrap="wrap">
@@ -511,7 +524,7 @@ export default function HomeScreen() {
       </YStack>
 
       <YStack gap="$3">
-        <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
+        <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(16)} color={colors.text}>
           Mera Parivar
         </Text>
         <XStack gap="$3" flexWrap="wrap">

@@ -16,6 +16,7 @@ import {
 } from '@/design-system';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { withAlpha } from '@/utils/color';
+import { responsiveFont } from '@/utils/responsive-font';
 
 type SlideContent = {
   title: string;
@@ -86,7 +87,7 @@ function IntroSlide({
           <Text
             fontFamily={BrandTypography.tagline.fontFamily}
             fontWeight={BrandTypography.tagline.fontWeight}
-            fontSize={24}
+            fontSize={responsiveFont(24)}
             color="$color"
             textAlign="center"
           >
@@ -94,12 +95,12 @@ function IntroSlide({
           </Text>
           <Text
             fontFamily={BrandTypography.body.fontFamily}
-            fontSize={16}
+            fontSize={responsiveFont(16)}
             color="$color"
             opacity={0.75}
             textAlign="center"
             maxWidth={320}
-            lineHeight={22}
+            lineHeight={responsiveFont(22, { minMultiplier: 0.9, maxMultiplier: 1.05 })}
           >
             {blurb}
           </Text>

@@ -2,9 +2,11 @@ import { memo } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { Card, Text, YStack } from 'tamagui';
+import { Platform } from 'react-native';
 
 import { ThemeColors } from '@/constants/tamagui-theme';
 import { BrandTypography } from '@/design-system/tokens';
+import { responsiveFont } from '@/utils/responsive-font';
 
 type HomeNameplateProps = {
   themeName: 'light' | 'dark';
@@ -57,6 +59,7 @@ export const HomeNameplate = memo(function HomeNameplate({
       borderColor={accentColor}
       maxWidth={360}
       width="100%"
+      {...(Platform.OS === 'android' ? { elevation: 8 } : {})}
     >
       <LinearGradient
         colors={gradientColors}
@@ -78,7 +81,7 @@ export const HomeNameplate = memo(function HomeNameplate({
               shadowColor={accentColor}
               shadowRadius={12}
             >
-              <Text fontSize={18} color={accentForeground} fontWeight="700">
+              <Text fontSize={responsiveFont(18)} color={accentForeground} fontWeight="700">
                 {initials || 'P'}
               </Text>
             </YStack>
@@ -86,7 +89,7 @@ export const HomeNameplate = memo(function HomeNameplate({
           <Text
             fontFamily={BrandTypography.tagline.fontFamily}
             fontWeight={BrandTypography.tagline.fontWeight}
-            fontSize={20}
+            fontSize={responsiveFont(20)}
             color={palette.text}
             textAlign="center"
           >

@@ -5,6 +5,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Svg, { Circle, Line, Text as SvgText, Rect, G } from 'react-native-svg';
 
 import { ThemeColors, accentPalette } from '@/constants/tamagui-theme';
+import { responsiveFont } from '@/utils/responsive-font';
 
 type Node = {
   id: string;
@@ -115,7 +116,7 @@ export function FamilyFlow() {
                 textAnchor="middle"
                 alignmentBaseline="middle"
                 fill={themeName === 'dark' ? palette.accentForeground : ThemeColors.light.background}
-                fontSize={11}
+                fontSize={responsiveFont(11)}
                 fontWeight="600"
               >
                 {node.label}

@@ -6,6 +6,7 @@ import { Text, YStack } from 'tamagui';
 import { ThemePreferenceContext } from '@/app/_layout';
 import { ThemeColors } from '@/constants/tamagui-theme';
 import { BrandSpacing, BrandTypography } from '@/design-system';
+import { responsiveFont } from '@/utils/responsive-font';
 
 const sampleNotifications = [
   {
@@ -70,13 +71,13 @@ export default function NotificationsScreen() {
               shadowRadius={14}
               gap="$2"
             >
-              <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={16} color={colors.text}>
+              <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(16)} color={colors.text}>
                 {note.title}
               </Text>
-              <Text color={colors.secondary} fontSize={14}>
+              <Text color={colors.secondary} fontSize={responsiveFont(14)}>
                 {note.body}
               </Text>
-              <Text color={colors.muted} fontSize={12}>
+              <Text color={colors.muted} fontSize={responsiveFont(12)}>
                 {note.timestamp}
               </Text>
             </YStack>
