@@ -25,6 +25,7 @@ export function useParivarStatus() {
   const [hasJoinedParivar, setHasJoinedParivar] = useState(false);
   const [latestFamilyDraft, setLatestFamilyDraft] = useState<LatestFamilyDraft | null>(null);
   const [primaryFamily, setPrimaryFamily] = useState<PrimaryFamilyInfo | null>(null);
+  const [familiesList, setFamiliesList] = useState<PrimaryFamilyInfo[]>([]);
 
   const refreshStatus = useCallback(async () => {
     if (!firebaseAuth?.currentUser || !firebaseDb) {
@@ -82,6 +83,15 @@ export function useParivarStatus() {
           setPrimaryFamily(null);
         }
 
+        setFamiliesList(
+          normalizedFamilies.map((family) => ({
+            id: typeof family.id === 'string' ? family.id : undefined,
+            name: typeof family.name === 'string' ? family.name : 'Parivar',
+            relationship:
+              typeof family.relationship === 'string' ? family.relationship : undefined,
+          }))
+        );
+
         const rawDraft = (data as { latestFamilyDraft?: unknown }).latestFamilyDraft;
         if (rawDraft && typeof rawDraft === 'object' && rawDraft !== null) {
           const draft = rawDraft as Record<string, unknown>;
@@ -116,6 +126,7 @@ export function useParivarStatus() {
         setHasJoinedParivar(false);
         setLatestFamilyDraft(null);
         setPrimaryFamily(null);
+        setFamiliesList([]);
       }
     } catch (error) {
       console.warn('Failed to load parivar status', error);
@@ -124,6 +135,7 @@ export function useParivarStatus() {
       setHasJoinedParivar(false);
       setLatestFamilyDraft(null);
       setPrimaryFamily(null);
+      setFamiliesList([]);
     }
   }, []);
 
@@ -138,5 +150,6 @@ export function useParivarStatus() {
     refreshStatus,
     latestFamilyDraft,
     primaryFamily,
+    familiesList,
   };
 }

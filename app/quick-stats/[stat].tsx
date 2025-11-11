@@ -260,8 +260,9 @@ export default function QuickStatDetailScreen() {
 
   const { themeName } = useContext(ThemePreferenceContext);
   const palette = ThemeColors[themeName];
-  const { latestFamilyDraft, hasCreatedParivar, primaryFamily } = useParivarStatus();
+  const { latestFamilyDraft, hasCreatedParivar, primaryFamily, familiesList } = useParivarStatus();
   const isParivarMembers = slugParam === 'parivar-members';
+  const isParivarLinked = slugParam === 'parivar-linked';
   const familyId = primaryFamily?.id ?? latestFamilyDraft?.familyId ?? null;
   const familyDisplayName = latestFamilyDraft?.familyName ?? primaryFamily?.name ?? 'Parivar';
   const user = firebaseAuth?.currentUser;
@@ -424,6 +425,39 @@ export default function QuickStatDetailScreen() {
     };
   }, [isParivarMembers, resolveMembers]);
 
+  const linkedParivars = useMemo(() => {
+    if (!isParivarLinked) {
+      return { list: [], usingPlaceholder: false };
+    }
+
+    const resolved = familiesList.length ? familiesList : null;
+    const placeholder = [
+      { id: 'kabra', name: 'Kabra Parivar', relationship: 'Mentor Parivar', location: 'Jaipur, Rajasthan', since: 'Connected since Feb 2024' },
+      { id: 'patel', name: 'Patel Kutumb', relationship: 'Family Friends', location: 'Ahmedabad, Gujarat', since: 'Connected since Nov 2023' },
+      { id: 'rao', name: 'Rao Clan', relationship: 'Business Allies', location: 'Hyderabad, Telangana', since: 'Connected since Jan 2023' },
+    ];
+
+    const source = resolved ?? placeholder;
+    const usingPlaceholder = resolved === null;
+
+    const list = source.map((family, index) => {
+      const template = placeholder[index % placeholder.length];
+      const since = (family as { since?: string } | undefined)?.since ?? template.since;
+      const isSelfFamily =
+        family.id === primaryFamily?.id || (family.relationship ?? '').toLowerCase() === 'self';
+      return {
+        id: family.id ?? `linked-${index}`,
+        name: family.name ?? 'Parivar',
+        relation: family.relationship || 'Connected Parivar',
+        since,
+        canDisconnect: !isSelfFamily,
+        raw: family,
+      };
+    });
+
+    return { list, usingPlaceholder };
+  }, [familiesList, isParivarLinked, primaryFamily?.id]);
+
   if (!config) {
     return <Redirect href="/(tabs)" />;
   }
@@ -462,6 +496,18 @@ export default function QuickStatDetailScreen() {
 
   const handleMemberInvite = (name: string) => {
     Alert.alert('Invite sent', `${name} will receive a fresh invite to join your Parivar.`);
+  };
+
+  const handleConnectAnotherParivar = () => {
+    Alert.alert('Connect Parivar', 'Cross-Parivar linking flow is coming soon.');
+  };
+
+  const handleVisitParivar = (name: string) => {
+    Alert.alert('Opening Parivar Hub', `${name} will open in Kutumb Kendra shortly.`);
+  };
+
+  const handleDisconnectParivar = (name: string) => {
+    Alert.alert('Disconnect request sent', `${name} will be unlinked once admins confirm.`);
   };
 
   const handleOpenMemberForm = () => {
@@ -615,231 +661,302 @@ export default function QuickStatDetailScreen() {
     setSelectionPicker(null);
   };
 
-
-const renderMemberForm = (mode: 'add' | 'edit') => {
-  const isEdit = mode === 'edit';
-  return (
-    <Card padding="$4" backgroundColor={colors.cardBackground} shadowColor={colors.shadow} shadowRadius={18} gap="$3">
-      <YStack gap="$2">
-        <Text fontSize={responsiveFont(16)} fontWeight="700" color={colors.text}>
-          {isEdit ? 'Update family member' : 'Add a family member'}
-        </Text>
-        <Text color={colors.secondary} fontSize={responsiveFont(13)}>
-          {isEdit
-            ? 'Edit this member’s details and we will keep everything in sync.'
-            : 'These details help keep everyone nurtured and connected.'}
-        </Text>
-      </YStack>
-
-      <YStack gap="$3">
+  const renderMemberForm = (mode: 'add' | 'edit') => {
+    const isEdit = mode === 'edit';
+    return (
+      <Card padding="$4" backgroundColor={colors.cardBackground} shadowColor={colors.shadow} shadowRadius={18} gap="$3">
         <YStack gap="$2">
-          <Text fontWeight="600" color={colors.text}>
-            Name
+          <Text fontSize={responsiveFont(16)} fontWeight="700" color={colors.text}>
+            {isEdit ? 'Update family member' : 'Add a family member'}
           </Text>
-          <Input
-            value={memberForm.name}
-            onChangeText={(value) => setMemberForm((prev) => ({ ...prev, name: value }))}
-            placeholder="Enter first name"
-            size="$4"
-            bg={colors.background}
-            borderColor={colors.shadow}
-            borderWidth={1}
-            color={colors.text}
-            placeholderTextColor={colors.secondary}
-          />
+          <Text color={colors.secondary} fontSize={responsiveFont(13)}>
+            {isEdit
+              ? 'Edit this member’s details and we will keep everything in sync.'
+              : 'These details help keep everyone nurtured and connected.'}
+          </Text>
         </YStack>
 
-        <YStack gap="$2">
-          <Text fontWeight="600" color={colors.text}>
-            Relationship
-          </Text>
-          <Button
-            size="$4"
-            backgroundColor={colors.background}
-            borderColor={colors.shadow}
-            borderWidth={1}
-            justifyContent="flex-start"
-            onPress={() =>
-              setSelectionPicker({ type: 'relationship', tempValue: memberForm.relationship || '' })
-            }
-          >
-            <Text color={memberForm.relationship ? colors.text : colors.secondary}>
-              {memberForm.relationship || 'Select relationship'}
-            </Text>
-          </Button>
-        </YStack>
-
-        <YStack gap="$2">
-          <Text fontWeight="600" color={colors.text}>
-            Phone number
-          </Text>
-          <XStack
-            ai="center"
-            gap="$2"
-            borderRadius="$5"
-            borderWidth={1}
-            borderColor={colors.shadow}
-            paddingHorizontal="$3"
-            paddingVertical="$2"
-            backgroundColor={colors.background}
-          >
-            <Text color={colors.text} fontWeight="600">
-              {defaultPhoneCountryCode}
+        <YStack gap="$3">
+          <YStack gap="$2">
+            <Text fontWeight="600" color={colors.text}>
+              Name
             </Text>
             <Input
-              flex={1}
-              borderWidth={0}
-              backgroundColor="transparent"
-              value={memberForm.phoneNumber}
-              onChangeText={(value) =>
-                setMemberForm((prev) => ({
-                  ...prev,
-                  phoneNumber: value.replace(/\D/g, ''),
-                }))
-              }
-              placeholder="9876543210"
+              value={memberForm.name}
+              onChangeText={(value) => setMemberForm((prev) => ({ ...prev, name: value }))}
+              placeholder="Enter first name"
               size="$4"
+              bg={colors.background}
+              borderColor={colors.shadow}
+              borderWidth={1}
               color={colors.text}
               placeholderTextColor={colors.secondary}
-              keyboardType="number-pad"
             />
-          </XStack>
-        </YStack>
+          </YStack>
 
-        <YStack gap="$2">
-          <Text fontWeight="600" color={colors.text}>
-            Gender
-          </Text>
-          <Button
-            size="$4"
-            backgroundColor={colors.background}
-            borderColor={colors.shadow}
-            borderWidth={1}
-            justifyContent="flex-start"
-            onPress={() => setSelectionPicker({ type: 'gender', tempValue: memberForm.gender || '' })}
-          >
-            <Text color={memberForm.gender ? colors.text : colors.secondary}>
-              {memberForm.gender || 'Select gender'}
+          <YStack gap="$2">
+            <Text fontWeight="600" color={colors.text}>
+              Relationship
             </Text>
-          </Button>
-        </YStack>
+            <Button
+              size="$4"
+              backgroundColor={colors.background}
+              borderColor={colors.shadow}
+              borderWidth={1}
+              justifyContent="flex-start"
+              onPress={() =>
+                setSelectionPicker({ type: 'relationship', tempValue: memberForm.relationship || '' })
+              }
+            >
+              <Text color={memberForm.relationship ? colors.text : colors.secondary}>
+                {memberForm.relationship || 'Select relationship'}
+              </Text>
+            </Button>
+          </YStack>
 
-        <YStack gap="$2">
-          <Text fontWeight="600" color={colors.text}>
-            Blood group
-          </Text>
-          <Button
-            size="$4"
-            backgroundColor={colors.background}
-            borderColor={colors.shadow}
-            borderWidth={1}
-            justifyContent="flex-start"
-            onPress={() => setSelectionPicker({ type: 'blood', tempValue: memberForm.bloodGroup || '' })}
-          >
-            <Text color={memberForm.bloodGroup ? colors.text : colors.secondary}>
-              {memberForm.bloodGroup || 'Select blood group'}
+          <YStack gap="$2">
+            <Text fontWeight="600" color={colors.text}>
+              Phone number
             </Text>
-          </Button>
-        </YStack>
+            <XStack
+              ai="center"
+              gap="$2"
+              borderRadius="$5"
+              borderWidth={1}
+              borderColor={colors.shadow}
+              paddingHorizontal="$3"
+              paddingVertical="$2"
+              backgroundColor={colors.background}
+            >
+              <Text color={colors.text} fontWeight="600">
+                {defaultPhoneCountryCode}
+              </Text>
+              <Input
+                flex={1}
+                borderWidth={0}
+                backgroundColor="transparent"
+                value={memberForm.phoneNumber}
+                onChangeText={(value) =>
+                  setMemberForm((prev) => ({
+                    ...prev,
+                    phoneNumber: value.replace(/\D/g, ''),
+                  }))
+                }
+                placeholder="9876543210"
+                size="$4"
+                color={colors.text}
+                placeholderTextColor={colors.secondary}
+                keyboardType="number-pad"
+              />
+            </XStack>
+          </YStack>
 
-        <YStack gap="$2">
-          <Text fontWeight="600" color={colors.text}>
-            Date of birth
-          </Text>
-          <Button
-            size="$4"
-            backgroundColor={colors.background}
-            borderColor={colors.shadow}
-            borderWidth={1}
-            justifyContent="flex-start"
-            onPress={() => {
-              const existing = memberForm.dob ? parseDateString(memberForm.dob) : undefined;
-              setMemberTempDob(existing ?? new Date(1990, 0, 1));
-              setMemberDobPickerVisible(true);
-            }}
-          >
-            <Text color={memberForm.dob ? colors.text : colors.secondary}>
-              {memberForm.dob || 'Select birth date'}
+          <YStack gap="$2">
+            <Text fontWeight="600" color={colors.text}>
+              Gender
             </Text>
-          </Button>
-        </YStack>
+            <Button
+              size="$4"
+              backgroundColor={colors.background}
+              borderColor={colors.shadow}
+              borderWidth={1}
+              justifyContent="flex-start"
+              onPress={() => setSelectionPicker({ type: 'gender', tempValue: memberForm.gender || '' })}
+            >
+              <Text color={memberForm.gender ? colors.text : colors.secondary}>
+                {memberForm.gender || 'Select gender'}
+              </Text>
+            </Button>
+          </YStack>
 
-        <YStack gap="$2">
-          <Text fontWeight="600" color={colors.text}>
-            Medical conditions
-          </Text>
-          <XStack flexWrap="wrap" gap="$2">
-            {medicalOptions.map((option) => {
-              const selections = memberForm.medicalConditions
-                .split(',')
-                .map((value) => value.trim())
-                .filter(Boolean);
-              const active = selections.includes(option);
-              return (
-                <Button
-                  key={option}
-                  size="$2"
-                  paddingHorizontal="$3"
-                  paddingVertical="$1"
-                  borderRadius="$4"
-                  variant={active ? 'accent' : 'outlined'}
-                  onPress={() => {
-                    setMemberForm((prev) => {
-                      const current = prev.medicalConditions
-                        .split(',')
-                        .map((value) => value.trim())
-                        .filter(Boolean);
+          <YStack gap="$2">
+            <Text fontWeight="600" color={colors.text}>
+              Blood group
+            </Text>
+            <Button
+              size="$4"
+              backgroundColor={colors.background}
+              borderColor={colors.shadow}
+              borderWidth={1}
+              justifyContent="flex-start"
+              onPress={() => setSelectionPicker({ type: 'blood', tempValue: memberForm.bloodGroup || '' })}
+            >
+              <Text color={memberForm.bloodGroup ? colors.text : colors.secondary}>
+                {memberForm.bloodGroup || 'Select blood group'}
+              </Text>
+            </Button>
+          </YStack>
 
-                      let next;
-                      if (option === 'None') {
-                        next = ['None'];
-                      } else {
-                        next = current.filter((value) => value !== 'None');
-                        if (next.includes(option)) {
-                          next = next.filter((value) => value !== option);
-                        } else {
-                          next = [...next, option];
-                        }
-                        if (next.length === 0) {
+          <YStack gap="$2">
+            <Text fontWeight="600" color={colors.text}>
+              Date of birth
+            </Text>
+            <Button
+              size="$4"
+              backgroundColor={colors.background}
+              borderColor={colors.shadow}
+              borderWidth={1}
+              justifyContent="flex-start"
+              onPress={() => {
+                const existing = memberForm.dob ? parseDateString(memberForm.dob) : undefined;
+                setMemberTempDob(existing ?? new Date(1990, 0, 1));
+                setMemberDobPickerVisible(true);
+              }}
+            >
+              <Text color={memberForm.dob ? colors.text : colors.secondary}>
+                {memberForm.dob || 'Select birth date'}
+              </Text>
+            </Button>
+          </YStack>
+
+          <YStack gap="$2">
+            <Text fontWeight="600" color={colors.text}>
+              Medical conditions
+            </Text>
+            <XStack flexWrap="wrap" gap="$2">
+              {medicalOptions.map((option) => {
+                const selections = memberForm.medicalConditions
+                  .split(',')
+                  .map((value) => value.trim())
+                  .filter(Boolean);
+                const active = selections.includes(option);
+                return (
+                  <Button
+                    key={option}
+                    size="$2"
+                    paddingHorizontal="$3"
+                    paddingVertical="$1"
+                    borderRadius="$4"
+                    variant={active ? 'accent' : 'outlined'}
+                    onPress={() => {
+                      setMemberForm((prev) => {
+                        const current = prev.medicalConditions
+                          .split(',')
+                          .map((value) => value.trim())
+                          .filter(Boolean);
+
+                        let next;
+                        if (option === 'None') {
                           next = ['None'];
+                        } else {
+                          next = current.filter((value) => value !== 'None');
+                          if (next.includes(option)) {
+                            next = next.filter((value) => value !== option);
+                          } else {
+                            next = [...next, option];
+                          }
+                          if (next.length === 0) {
+                            next = ['None'];
+                          }
                         }
-                      }
 
-                      return {
-                        ...prev,
-                        medicalConditions: next.join(', '),
-                      };
-                    });
-                  }}
-                >
-                  <Text fontSize={responsiveFont(12)}>{option}</Text>
-                </Button>
-              );
-            })}
-          </XStack>
+                        return {
+                          ...prev,
+                          medicalConditions: next.join(', '),
+                        };
+                      });
+                    }}
+                  >
+                    <Text fontSize={responsiveFont(12)}>{option}</Text>
+                  </Button>
+                );
+              })}
+            </XStack>
+          </YStack>
         </YStack>
+
+        <XStack gap="$3">
+          <Button flex={1} backgroundColor={colors.cardBackground} onPress={handleCancelMemberForm}>
+            <Text color={colors.text} fontWeight="600">
+              Cancel
+            </Text>
+          </Button>
+          <Button
+            flex={1}
+            backgroundColor={palette.accent}
+            onPress={handleQuickMemberSubmit}
+            disabled={memberSaving}
+          >
+            <Text color={palette.accentForeground} fontWeight="600">
+              {memberSaving ? 'Saving...' : isEdit ? 'Update member' : 'Save member'}
+            </Text>
+          </Button>
+        </XStack>
+      </Card>
+    );
+  };
+
+  const renderLinkedParivarsContent = () => (
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={{
+        paddingHorizontal: BrandSpacing.gutter,
+        paddingVertical: BrandSpacing.stackGap,
+        gap: BrandSpacing.stackGap,
+      }}
+      showsVerticalScrollIndicator={false}
+    >
+      <YStack gap="$2">
+        <XStack ai="center" jc="space-between" flexWrap="wrap" gap="$2">
+          <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(18)} color={colors.text}>
+            Parivar linked
+          </Text>
+          <Button
+            size="$3"
+            backgroundColor={palette.accent}
+            color={palette.accentForeground}
+            onPress={handleConnectAnotherParivar}
+          >
+            Connect Parivar
+          </Button>
+        </XStack>
+        <Text color={colors.secondary} fontSize={responsiveFont(13)}>
+          Stay in sync with the Parivars you collaborate with and manage shared rituals together.
+        </Text>
       </YStack>
 
-      <XStack gap="$3">
-        <Button flex={1} backgroundColor={colors.cardBackground} onPress={handleCancelMemberForm}>
-          <Text color={colors.text} fontWeight="600">
-            Cancel
-          </Text>
-        </Button>
-        <Button
-          flex={1}
-          backgroundColor={palette.accent}
-          onPress={handleQuickMemberSubmit}
-          disabled={memberSaving}
-        >
-          <Text color={palette.accentForeground} fontWeight="600">
-            {memberSaving ? 'Saving...' : isEdit ? 'Update member' : 'Save member'}
-          </Text>
-        </Button>
-      </XStack>
-    </Card>
+      {linkedParivars.usingPlaceholder ? (
+        <Text color={colors.muted} fontSize={responsiveFont(12)}>
+          Preview data while we fetch your linked Parivars.
+        </Text>
+      ) : null}
+
+      <YStack gap="$3">
+        {linkedParivars.list.map((family) => (
+          <ParivarMemberCard
+            key={family.id}
+            name={family.name}
+            relation={family.relation}
+            statusLabel="Linked"
+            note={family.since}
+            tags={[family.relation, family.since].filter(Boolean) as string[]}
+            actions={
+              <XStack gap="$2" flexWrap="wrap">
+                <Button
+                  size="$3"
+                  backgroundColor={palette.accent}
+                  color={palette.accentForeground}
+                  onPress={() => handleVisitParivar(family.name)}
+                >
+                  Visit
+                </Button>
+                {family.canDisconnect ? (
+                  <Button
+                    size="$3"
+                    backgroundColor={palette.surface}
+                    color={colors.text}
+                    onPress={() => handleDisconnectParivar(family.name)}
+                  >
+                    Disconnect
+                  </Button>
+                ) : null}
+              </XStack>
+            }
+          />
+        ))}
+      </YStack>
+    </ScrollView>
   );
-};
 
   const renderParivarMembersContent = () => (
     <ScrollView
@@ -854,7 +971,7 @@ const renderMemberForm = (mode: 'add' | 'edit') => {
       <YStack gap="$2">
         <XStack ai="center" jc="space-between" flexWrap="wrap" gap="$2">
           <Text fontFamily={BrandTypography.tagline.fontFamily} fontSize={responsiveFont(18)} color={colors.text}>
-            Parivar members
+            Parivar linked
           </Text>
           <Button
             size="$3"
@@ -966,13 +1083,15 @@ const renderMemberForm = (mode: 'add' | 'edit') => {
     <>
       <Stack.Screen
         options={{
-          title: isParivarMembers ? '' : config.title,
-          headerShown: !isParivarMembers,
+          title: isParivarMembers || isParivarLinked ? '' : config.title,
+          headerShown: !(isParivarMembers || isParivarLinked),
           headerBackTitle: 'Back',
         }}
       />
       {isParivarMembers ? (
         renderParivarMembersContent()
+      ) : isParivarLinked ? (
+        renderLinkedParivarsContent()
       ) : (
         <ScrollView
           style={{ flex: 1, backgroundColor: colors.background }}
